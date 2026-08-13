@@ -97,6 +97,38 @@ struct SubagentGraphIntegratorTests {
         #expect(integrator.agentNodes[0].agentThinking == "pondering...")
     }
 
+    /// A second spawn for the SAME subagent id updates the existing run in
+    /// place rather than creating a duplicate: a deferred start_request arrives
+    /// after spawn_requested, so `running` backfills `startedAt`, and a goal
+    /// that wasn't on the initial request is filled into the empty context.
+    /// Guards the whole `if var run = runs[sid]` update branch.
+    @Test("re-spawn with same id backfills startedAt and empty context")
+    internal func reSpawnUpdatesExistingRun() throws {
+        let integrator = SubagentGraphIntegrator()
+
+        // First event: spawn_requested — not running yet, no goal provided.
+        let initial = SubagentPayload(
+            goal: "", taskCount: 1, taskIndex: 0,
+            subagentID: "s1", parentID: nil, depth: 0, model: "claude-sonnet-5"
+        )
+        integrator.upsertAgent(payload: initial, running: false, delegatingToolID: "tool_1")
+
+        #expect(integrator.agentNodes.count == 1)
+        var node = try #require(integrator.agentNodes.first { $0.id == "agent-s1" })
+        #expect(node.startedAt == nil)
+        #expect(node.context == nil || node.context?.isEmpty == true)
+
+        // Second event: start arrives — running flips true and the goal is now
+        // known. Both should update the EXISTING node, not append a new one.
+        integrator.upsertAgent(payload: spawnPayload(id: "s1", goal: "summarize the logs"),
+                               running: true, delegatingToolID: "tool_1")
+
+        #expect(integrator.agentNodes.count == 1)
+        node = try #require(integrator.agentNodes.first { $0.id == "agent-s1" })
+        #expect(node.startedAt != nil)
+        #expect(node.context == "summarize the logs")
+    }
+
     @Test("reset clears all runs")
     func resetClears() {
         let integrator = SubagentGraphIntegrator()

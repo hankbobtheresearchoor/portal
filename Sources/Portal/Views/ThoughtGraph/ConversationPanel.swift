@@ -110,7 +110,15 @@ internal struct ConversationPanel: View {
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxHeight: .infinity)
+            // `maxHeight: .infinity` alone still answers an *ideal*-height query
+            // with the full content height, and answering it walks every row of
+            // the LazyVStack above (LazyStack.measureEstimates → signalPrefetch →
+            // requestUpdate → another pass — the relayout loop documented in
+            // DashboardCanvasView). A minHeight of 0 makes the ideal answer 0
+            // instead, so an ancestor's measurement is satisfied without
+            // enumerating the transcript, while the flexible max still fills the
+            // panel exactly as before.
+            .frame(minHeight: 0, maxHeight: .infinity)
             .background(Theme.background)
             .onChange(of: streamTailKey) { _, _ in if showsLiveTail { scrollToBottom(proxy) } }
             .onChange(of: chatViewModel.messages.count) { _, _ in if showsLiveTail { scrollToBottom(proxy) } }

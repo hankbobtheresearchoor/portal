@@ -707,19 +707,69 @@ final class GatewayClient: NSObject, ObservableObject, URLSessionWebSocketDelega
         connectionState = .disconnected
     }
 
-    /// Tear down a WebSocket transport off the main actor. `invalidateAndCancel()`
-    /// can block the caller (it drains delegate callbacks + connection state); on
-    /// the main actor during reconnect churn that stall IS the beachball. The
-    /// task closes the socket first, then invalidates the session. Both are
-    /// nonisolated URLSession APIs, so a detached task is safe. Any late delegate
-    /// callback from this dying session is ignored by the `session === urlSession`
-    /// guard in the delegate methods, since callers nil out `urlSession` before
-    /// handing it here.
+    /// Tear down a WebSocket transport. `invalidateAndCancel()` can block the
+    /// caller (it drains delegate callbacks + connection state); on the main
+    /// actor during reconnect churn that stall IS the beachball, so it still
+    /// runs off-main. Any late delegate callback from this dying session is
+    /// ignored by the `session === urlSession` guard in the delegate methods,
+    /// since callers nil out `urlSession` before handing it here.
+    ///
+    /// Two details here are load-bearing, both learned from a live process found
+    /// holding **30 ESTABLISHED sockets** to the gateway — one `GatewayClient`
+    /// that had dialled 30 transports and closed none. Bytes sat unread in the
+    /// kernel receive buffers of several, i.e. the harness was streaming a turn
+    /// into sockets nobody was reading. Because every delegate method is gated on
+    /// `session === self.urlSession`, those frames were discarded with no log
+    /// line and no `recordDroppedEvent`: the session read as "still streaming"
+    /// while no updates arrived and the thought graph stayed empty.
+    ///
+    /// The whole teardown used to sit inside a `Task.detached(priority: .utility)`,
+    /// so *nothing* closed the socket unless that task ran — and on the evidence
+    /// it didn't. All 30 connections were ESTABLISHED with Send-Q 0: no FIN, and
+    /// no Close frame in flight either. Measured against a server that completes
+    /// the upgrade and then answers nothing, every teardown that actually executes
+    /// closes the socket (`cancel` alone → 0 survivors; `invalidateAndCancel`
+    /// alone → 0; both → 0). Only "never ran" reproduces 30 survivors. So the bug
+    /// was never *which* calls we make, it was that they were unreachable. Both
+    /// halves below are therefore about reachability, not about URLSession:
+    ///
+    /// 1. **The cancel is synchronous.** `cancel(with:reason:)` is a
+    ///    non-blocking signal — it queues a Close frame and returns — so there
+    ///    was never a reason to defer it. Inline, closing the socket depends on
+    ///    nothing being scheduled at all.
+    /// 2. **The deferred invalidation runs on a dedicated queue, not a
+    ///    `.utility` pool.** Whatever starves the teardown starves it by QoS:
+    ///    measured with the utility band saturated, `Task.detached(.utility)` and
+    ///    `DispatchQueue.global(qos: .utility)` both failed to run within 5s,
+    ///    while `.default`/`.userInitiated` globals and a dedicated serial queue
+    ///    all ran immediately. A global queue is *not* safer than a task here;
+    ///    the queue below is, because it brings its own thread.
     nonisolated private func teardownTransport(session: URLSession?, task: URLSessionWebSocketTask?) {
         guard session != nil || task != nil else { return }
-        Task.detached(priority: .utility) {
-            task?.cancel(with: .normalClosure, reason: nil)
-            session?.invalidateAndCancel()
+        // Close the transport here and now — see (1) above.
+        task?.cancel(with: .normalClosure, reason: nil)
+        guard let session else { return }
+        Self.invalidateOffMainActor(session)
+    }
+
+    /// Serial queue for session invalidation — see (2) on `teardownTransport`.
+    /// Serial because invalidation is rare and ordering costs nothing, and
+    /// dedicated because a shared `.utility` band is exactly what was measured to
+    /// stall.
+    nonisolated private static let teardownQueue = DispatchQueue(
+        label: "com.ethenotethan.Portal.gateway-teardown",
+        qos: .utility
+    )
+
+    /// Invalidate `session` off the main actor. Split out from `teardownTransport`
+    /// so the scheduling choice is assertable on its own: the socket close and the
+    /// invalidation are separate leaks. A closed socket whose session was never
+    /// invalidated still pins the whole client, because a `URLSession` retains
+    /// itself and its delegate until it is invalidated — which is why the leaking
+    /// process held 30 sessions while `leaks` reported nothing.
+    nonisolated internal static func invalidateOffMainActor(_ session: URLSession) {
+        teardownQueue.async {
+            session.invalidateAndCancel()
         }
     }
 
@@ -944,6 +994,11 @@ final class GatewayClient: NSObject, ObservableObject, URLSessionWebSocketDelega
         hasConnectedSinceBudgetGrant = false
         reconnectTask?.cancel()
         reconnectTask = nil
+        // The transport being replaced may still report `.connected`. Publish the
+        // new dial before opening it so the wait below cannot return success for
+        // the stale socket instead of the replacement.
+        connectionState = .connecting
+        refreshDebugSnapshot()
         openWebSocket()
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {

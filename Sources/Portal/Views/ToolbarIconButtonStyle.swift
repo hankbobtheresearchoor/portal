@@ -89,10 +89,14 @@ internal struct ToolbarIconButtonStyle: ButtonStyle {
 }
 
 extension View {
-    /// Styles a top-right chrome button in the treatment configured for `slot`.
+    /// Styles a top-right chrome button in the treatment configured for `slot`,
+    /// and attaches the slot's hover tooltip.
     ///
     /// Reads `ThemeManager.shared` internally so each of the ten call sites stays
-    /// one line and none of them needs its own `@ObservedObject`.
+    /// one line and none of them needs its own `@ObservedObject`. The tooltip
+    /// rides here too — icon-only buttons are guessing games without one, and
+    /// applying it in the modifier means no call site (or future slot) can
+    /// forget it.
     internal func toolbarIcon(_ slot: ToolbarIconSlot) -> some View {
         ToolbarIconModifierBody(content: self, slot: slot)
     }
@@ -109,12 +113,15 @@ private struct ToolbarIconModifierBody<Content: View>: View {
         // is what the toolbar looked like before this setting existed, and it
         // has to keep looking exactly that way — down to SwiftUI's own hover and
         // press behavior — for anyone who never opens the pane.
-        if appearance.treatment == .plain, appearance.tint == .neutral {
-            content
-                .buttonStyle(.borderless)
-                .foregroundStyle(Theme.primary)
-        } else {
-            content.buttonStyle(ToolbarIconButtonStyle(appearance: appearance))
+        Group {
+            if appearance.treatment == .plain, appearance.tint == .neutral {
+                content
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Theme.primary)
+            } else {
+                content.buttonStyle(ToolbarIconButtonStyle(appearance: appearance))
+            }
         }
+        .help(slot.helpText)
     }
 }

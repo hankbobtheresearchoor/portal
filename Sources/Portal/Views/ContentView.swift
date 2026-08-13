@@ -548,6 +548,7 @@ internal struct ContentView: View {
                     }
                     .buttonStyle(.borderless)
                     .padding(.leading, 12)
+                    .help(isMacSidebarVisible ? "Hide the sidebar" : "Show the sidebar")
                     .accessibilityLabel("Toggle Sidebar")
                     .accessibilityIdentifier("sidebarToggleButton")
 

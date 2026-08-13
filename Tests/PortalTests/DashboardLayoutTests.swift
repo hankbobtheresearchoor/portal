@@ -149,6 +149,131 @@ internal struct DashboardLayoutTests {
         #expect(reflowed.panels[0].frame.height <= 600)
     }
 
+    // MARK: - Reflow convergence (the beachball guard)
+    //
+    // DashboardCanvasView drives reflow from `onChange(of: geo.size)` on the
+    // GeometryReader whose children are the panels being reflowed, so reflow's
+    // output becomes its next input. If a second pass at the same canvas size can
+    // differ from the first — by even one ulp — the view graph never settles and
+    // the app spins at 100% CPU with the run loop never reaching idle. These
+    // tests pin the convergence properties that make that structurally
+    // impossible; they are load-bearing, not stylistic.
+
+    @Test("Reflow is idempotent: re-reflowing at the settled size changes nothing")
+    internal func reflowIsIdempotent() {
+        let old = CGSize(width: 1440, height: 900)
+        let new = CGSize(width: 1728, height: 1117)
+        let layout = DashboardLayout(panels: [
+            DashboardPanel(kind: .conversation, frame: CGRect(x: 8, y: 8, width: 1000, height: 884)),
+            DashboardPanel(kind: .flamechart, frame: CGRect(x: 1016, y: 8, width: 416, height: 440)),
+            DashboardPanel(kind: .files, frame: CGRect(x: 1016, y: 456, width: 416, height: 436)),
+        ])
+        let once = layout.reflowed(from: old, to: new)
+        // The closing edge of the real cycle: the canvas re-measures at the size
+        // it just settled at and reflows again. That must be exactly a no-op.
+        #expect(once.reflowed(from: new, to: new) == once)
+        // And applying the same transition again must not drift either.
+        #expect(once.reflowed(from: old, to: new).reflowed(from: new, to: new) == once.reflowed(from: old, to: new))
+    }
+
+    @Test("Reflow converges on ratios that don't divide evenly")
+    internal func reflowConvergesOnAwkwardRatios() {
+        // Sizes chosen so every scale factor is irrational-ish in binary: a
+        // window dragged to an arbitrary pixel, which is the common case. Raw
+        // float scaling drifts here; quantized scaling lands on a fixed point.
+        let old = CGSize(width: 1023, height: 767)
+        let new = CGSize(width: 1291, height: 913)
+        let layout = DashboardLayout(panels: [
+            DashboardPanel(kind: .skills, frame: CGRect(x: 37, y: 71, width: 431, height: 293)),
+            DashboardPanel(kind: .thinking, frame: CGRect(x: 501, y: 113, width: 389, height: 517)),
+        ])
+        var current = layout.reflowed(from: old, to: new)
+        // Ten further passes at the settled size — the loop the beachball ran.
+        for _ in 0..<10 {
+            let next = current.reflowed(from: new, to: new)
+            #expect(next == current)
+            current = next
+        }
+    }
+
+    @Test("Reflowed frames land on whole points")
+    internal func reflowQuantizesToWholePoints() {
+        // Integrality is what makes convergence provable rather than lucky:
+        // clamped(to:) only selects among integral operands when its bounds are
+        // integral, so an integral layout stays integral through the round trip.
+        let layout = DashboardLayout(panels: [
+            DashboardPanel(kind: .files, frame: CGRect(x: 13, y: 29, width: 307, height: 211))
+        ])
+        let reflowed = layout.reflowed(from: CGSize(width: 997, height: 601),
+                                       to: CGSize(width: 1300.4, height: 850.7))
+        for panel in reflowed.panels {
+            let f = panel.frame
+            #expect(f.minX == f.minX.rounded())
+            #expect(f.minY == f.minY.rounded())
+            #expect(f.width == f.width.rounded())
+            #expect(f.height == f.height.rounded())
+        }
+    }
+
+    @Test("A sub-point size change is not a resize")
+    internal func reflowIgnoresSubPointChange() {
+        // SwiftUI hands back sizes that wobble below a point between passes. If
+        // that counted as a resize, the handler would re-enter forever.
+        let layout = DashboardLayout(panels: [
+            DashboardPanel(kind: .conversation, frame: CGRect(x: 8, y: 8, width: 800, height: 600))
+        ])
+        let base = CGSize(width: 1200, height: 800)
+        let wobbled = CGSize(width: 1200.2, height: 799.8)
+        #expect(DashboardLayout.quantize(base) == DashboardLayout.quantize(wobbled))
+        #expect(layout.reflowed(from: base, to: wobbled) == layout)
+    }
+
+    @Test("A wobbling reported size drives no layout churn")
+    internal func reflowSurvivesWobblingSize() {
+        // The actual mechanism of the beachball, replayed. SwiftUI reports sizes
+        // that differ in their last bits between passes, so the old
+        // `guard old != new` was always true: each pass rescaled from a slightly
+        // different `old`, wrote @State, and invited another measurement. Under
+        // this exact loop the old implementation performed 160 writes in 200
+        // passes; the quantized one must perform zero.
+        var layout = DashboardLayout(panels: [
+            DashboardPanel(kind: .conversation, frame: CGRect(x: 8, y: 8, width: 1000, height: 884)),
+            DashboardPanel(kind: .flamechart, frame: CGRect(x: 1016, y: 8, width: 416, height: 440)),
+        ])
+        let base = CGSize(width: 1728, height: 1117)
+        let wobble: [CGFloat] = [0, 1e-13, -1e-13, 2e-13, -5e-14]
+        var writes = 0
+        var previous = base
+        for i in 0..<200 {
+            let reported = CGSize(width: base.width + wobble[i % wobble.count],
+                                  height: base.height + wobble[(i + 2) % wobble.count])
+            // Mirrors DashboardCanvasView's guard: quantized dead band first.
+            if DashboardLayout.quantize(previous) == DashboardLayout.quantize(reported) {
+                previous = reported
+                continue
+            }
+            let next = layout.reflowed(from: previous, to: reported)
+            if next != layout { writes += 1; layout = next }
+            previous = reported
+        }
+        #expect(writes == 0)
+    }
+
+    @Test("Reflow preserves the collapsed state of a panel")
+    internal func reflowPreservesCollapsed() {
+        // Reflow rebuilt each panel without carrying isCollapsed, so the default
+        // (false) silently expanded every collapsed panel on any window resize.
+        let layout = DashboardLayout(panels: [
+            DashboardPanel(kind: .files, frame: CGRect(x: 0, y: 0, width: 300, height: 200),
+                           isCollapsed: true),
+            DashboardPanel(kind: .skills, frame: CGRect(x: 320, y: 0, width: 300, height: 200)),
+        ])
+        let reflowed = layout.reflowed(from: CGSize(width: 800, height: 600),
+                                       to: CGSize(width: 1000, height: 700))
+        #expect(reflowed.panels[0].isCollapsed)
+        #expect(!reflowed.panels[1].isCollapsed)
+    }
+
     // MARK: - Seeded default
 
     @Test("Seeded default tiles the built-in lenses inside the canvas")

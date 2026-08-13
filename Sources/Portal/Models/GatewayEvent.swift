@@ -63,6 +63,34 @@ enum GatewayEvent {
         }
     }
 
+    /// Events that prove a turn is still running on the gateway, and so may
+    /// re-open a local stream that `isStreaming == false` claims has ended.
+    ///
+    /// `isLiveTurnEvent` alone is a one-way gate: it drops every live-turn event
+    /// except `messageStart` whenever local state says the turn is over. That is
+    /// right for the case it was written for — draining frames after the user
+    /// hits Stop — but wrong when the two have merely desynced, because the
+    /// terminal `messageComplete` is itself a live-turn event and gets dropped
+    /// too. The turn then never finishes locally: the avatar holds "Thinking…",
+    /// the thought graph pauses on whichever operation was last applied, and no
+    /// later event can clear it, which is why only a restart or an explicit stop
+    /// recovered the session.
+    ///
+    /// A `messageComplete` / `error` is a turn *ending*, so honouring it can
+    /// only ever settle local state — it cannot resurrect an interrupted turn
+    /// (the foreground path already guards on `streamingMessageID` being nil,
+    /// and the background path on finding the message to stamp). Treat those two
+    /// as re-entry points alongside `messageStart` and the desync self-heals on
+    /// the next frame instead of persisting until relaunch.
+    internal var resumesLiveTurn: Bool {
+        switch self {
+        case .messageStart, .messageComplete, .error:
+            true
+        default:
+            false
+        }
+    }
+
     var isSessionScopedRequestEvent: Bool {
         switch self {
         case .approvalRequest, .clarifyRequest, .sudoRequest, .secretRequest:

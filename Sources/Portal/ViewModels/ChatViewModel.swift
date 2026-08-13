@@ -173,6 +173,27 @@ final class ChatViewModel: ObservableObject {
         from the first trusted click. Calling it again is harmless but redundant.
       - HUD overlays (crosshair, stats, help text) must be `pointer-events: none` unless they are real
         buttons, so clicks pass through to the scene.
+    - **Backend intents in HTML artifacts** — an html artifact (a dashboard, a world, any page) can carry
+      buttons that DISPATCH REAL BACKEND ACTIONS, including kicking off contained agent sessions. Two parts:
+      1. Declare the intents in the artifact's action manifest (same "actions" array as datasets):
+         {"type": "intent", "id": "archive-issue", "label": "Archive", "intent": "linear.issue.archive",
+          "presentation": {"role": "destructive"}}. Only declared bindings can ever fire; the gateway
+         re-validates every click against the stored revision.
+      2. Mark up the page with INERT attributes — no JS, no fetch, no scheme URLs (the host injects the
+         only bridge that exists and ignores everything else):
+         <button data-hermes-binding="archive-issue" data-hermes-entity="issues/ARC-42">Archive</button>
+         `data-hermes-binding` names the declared intent id; `data-hermes-entity` (optional, ≤512 bytes)
+         says which entity the click is about. The host reflects progress back onto the SAME element as
+         `data-hermes-status` = "pending" | "needs-confirmation" | "succeeded" | "failed" | "conflict" |
+         "unsupported" — style those states with CSS attribute selectors (e.g.
+         [data-hermes-status="pending"] { opacity: .5 }) so the control shows its own progress.
+      In a 3D world, stage the binding from your raycast instead of wiring click handlers: while
+      `document.pointerLockElement` is set and the crosshair hits an actionable object, setAttribute the
+      binding and entity ONTO THE CANVAS (removeAttribute when it leaves, and whenever the lock is not
+      held — the first unlocked click must capture the mouse, not fire an action). The user's trusted
+      click then dispatches whatever they were aiming at — never call dispatchEvent or element.click(),
+      synthetic clicks are deliberately ignored. Confirmation for destructive intents is native chrome;
+      don't build your own.
     - **Courses** when the user asks to be TAUGHT a subject rather than told about it — "teach me X",
       "build me a curriculum/course on X", "I want to learn X properly". Emit a curriculum envelope and
       the app files it in Learning as a course with per-step progress, instead of a wall of chat prose
@@ -618,6 +639,35 @@ client.eventStream
         handleEvent(event, eventSessionID: sessionID)
     }
 
+    /// Desync local streaming state from the gateway's, the way a mid-turn
+    /// reconnect + resume does. No production path sets this in isolation —
+    /// that's the point: the wedge only reproduces once the two disagree.
+    internal func forceStreamingStateForTesting(_ streaming: Bool, sessionID: String) {
+        mutateSessionState(for: sessionID) { $0.isStreaming = streaming }
+    }
+
+    /// Drop a session's cached transcript while leaving its turn flags alone —
+    /// the state eviction used to produce for a streaming session.
+    internal func dropCachedMessagesForTesting(sessionID: String) {
+        let displayID = displaySessionID(for: sessionID)
+        sessionStates[displayID]?.messages = []
+        if displaySessionID(for: self.sessionID ?? "") == displayID {
+            messages = []
+        }
+    }
+
+    internal func cachedMessageCountForTesting(sessionID: String) -> Int? {
+        sessionStates[displaySessionID(for: sessionID)]?.messages.count
+    }
+
+    internal func activeToolCallsForTesting(sessionID: String) -> [String: ToolCallRecord]? {
+        sessionStates[displaySessionID(for: sessionID)]?.activeToolCalls
+    }
+
+    internal var streamingSessionIDsForTesting: Set<String> {
+        Set(sessionStates.filter { $0.value.isStreaming }.keys)
+    }
+
     /// Link the active short-lived gateway ID with the stable database ID shown
     /// in the sessions list. History is saved under both IDs so switching away
     /// and back does not depend on which ID is current at that exact moment.
@@ -706,6 +756,19 @@ client.eventStream
         var warmIDs = sessionStates.filter { !$0.value.messages.isEmpty }.map(\.key)
         guard warmIDs.count > Self.maxWarmSessionStates else { return }
         warmIDs.removeAll { $0 == activeDisplayID }
+        // Never evict a session with a turn in flight. Eviction is safe only
+        // because the transcript is recoverable from disk — and a streaming
+        // session's transcript is NOT: it holds the in-flight assistant shell,
+        // which exists nowhere else until `message.complete` persists it, and
+        // `restoreSessionState` deliberately skips the disk reload while
+        // `isStreaming` is true (disk history would clobber the live turn).
+        //
+        // Dropping it wedged the session on "Thinking…" with an empty
+        // transcript: `message.complete` could no longer find the shell to
+        // stamp, so the turn never settled. That is why this needed a long
+        // session (7+ warm states to trigger eviction at all) and a click away
+        // and back (the snapshot that runs it) to reproduce.
+        warmIDs.removeAll { sessionStates[$0]?.isStreaming == true }
         // Restore lazily reloads from ChatHistoryStore, so eviction only
         // costs a disk read on the next switch back to that session.
         let excess = warmIDs.count + 1 - Self.maxWarmSessionStates
@@ -1762,7 +1825,12 @@ if restoreSessionState(displayID: key) {
         await reasoningGraph.finalize()
     }
 
-    private func finishStreaming(status: String? = nil) {
+    /// - Parameter completedTurn: whether a live turn actually ended here. False
+    ///   when the gateway drained a `message.complete` for a turn local state had
+    ///   already finished — the settle below still has to run (that is what
+    ///   unwedges a desynced session), but a turn the user stopped must not fire
+    ///   the completion celebration or read its answer aloud.
+    private func finishStreaming(status: String? = nil, completedTurn: Bool = true) {
         if let msgID = streamingMessageID,
            let idx = messages.firstIndex(where: { $0.id == msgID }) {
             messages[idx].isStreaming = false
@@ -1785,6 +1853,8 @@ if restoreSessionState(displayID: key) {
         // applySessionEvent reads state.isStreaming from the snapshot, and a
         // remote messageStart is distinguished from late local frames by it.
         snapshotCurrentSessionState()
+
+        guard completedTurn else { return }
 
         // Positive reinforcement celebration
         if status == nil || status == "complete" {
@@ -2422,18 +2492,42 @@ if restoreSessionState(displayID: key) {
 
     private func applySessionEvent(_ event: GatewayEvent, to eventSessionID: String) {
         let displayID = displaySessionID(for: eventSessionID)
+        /// Whether we have ANY local record of this session. Absence is not
+        /// evidence that a turn ended here — see the drop guard below.
+        let isKnownSession = sessionStates[displayID] != nil
         var state = sessionStates[displayID] ?? SessionRuntimeState()
+        /// Whether this session had a live turn BEFORE this event was applied.
+        /// Distinguishes a turn genuinely finishing here from the gateway
+        /// draining a turn the user already stopped — the two need the same
+        /// state settling but only the first is a completion to celebrate.
+        let wasStreaming = state.isStreaming
 
-        if event.isLiveTurnEvent && !state.isStreaming {
-            switch event {
-            case .messageStart:
-                break
-            default:
-                let reason = "late live-turn event after stream ended"
-                log.info("ChatViewModel ignored late live event after stream ended: \(event.debugName)")
-                gatewayClient?.recordDroppedEvent(event, sessionID: eventSessionID, reason: reason)
-                return
-            }
+        // Drop live-turn frames that arrive after the turn ended locally — the
+        // gateway can drain one in-flight turn after the UI has stopped it.
+        //
+        // `resumesLiveTurn` is the escape hatch, and it is load-bearing: local
+        // `isStreaming` and the gateway's view of the turn CAN desync (a
+        // reconnect mid-turn, an `error` frame for a turn the agent then keeps
+        // running, a resume whose persisted history lags the live turn). Without
+        // it the guard was one-way — the terminal `messageComplete` is itself a
+        // live-turn event, so it was dropped along with everything else and the
+        // turn could never finish locally. The avatar sat on "Thinking…", the
+        // thought graph paused on the last operation it had applied, and no
+        // subsequent event could clear it; only a relaunch or an explicit Stop
+        // recovered it. Honouring the turn-ending frames lets the desync
+        // self-heal on the next event.
+        //
+        // `isKnownSession` narrows it further: with no cached state at all, the
+        // freshly-defaulted `isStreaming == false` above is a default, not an
+        // observation, so it is no evidence the turn ended. Dropping on it
+        // silently discarded every frame of a session this client had not
+        // cached yet — another client's turn on a shared session, or one whose
+        // state was cleared by a gateway switch.
+        if event.isLiveTurnEvent && isKnownSession && !state.isStreaming && !event.resumesLiveTurn {
+            let reason = "late live-turn event after stream ended"
+            log.info("ChatViewModel ignored late live event after stream ended: \(event.debugName)")
+            gatewayClient?.recordDroppedEvent(event, sessionID: eventSessionID, reason: reason)
+            return
         }
 
         // Skip high-frequency delta events for background (non-visible)
@@ -2535,7 +2629,20 @@ if restoreSessionState(displayID: key) {
             }
             guard let msgID = state.streamingMessageID,
                   let idx = state.messages.firstIndex(where: { $0.id == msgID }) else {
+                // No message to stamp — but the turn IS over on the gateway, so
+                // settle the flags anyway. This `break` used to leave
+                // `isStreaming` true forever, which is the second way a session
+                // wedged on "Thinking…": a background turn whose transcript was
+                // dropped (message eviction, or a slim state that outlived its
+                // shell) can't find its shell here, and the stuck flag then
+                // blocked `submitPrompt`'s `guard !isStreaming` too — so the
+                // session could neither finish nor accept a new prompt until
+                // Stop (which calls finishStreaming) or a relaunch cleared it.
                 state.activeToolCalls = [:]
+                state.isStreaming = false
+                state.streamingMessageID = nil
+                state.avatarState = .idle
+                state.isRemoteTurn = false
                 break
             }
             state.messages[idx].content = payload.text
@@ -2840,7 +2947,12 @@ if restoreSessionState(displayID: key) {
                 }
             }
             if case .messageComplete(let payload) = event {
-                finishStreaming(status: payload.status)
+                // `completedTurn: wasStreaming` — a completion the guard above
+                // now lets through for a session that was NOT streaming is
+                // either a post-Stop drain or a desync heal. Both need the
+                // settle; neither is a turn the user waited for, so suppress
+                // the celebration and the spoken summary.
+                finishStreaming(status: payload.status, completedTurn: wasStreaming)
                 // Extract attachments and pre-fetch remote ones
                 if let msgID = state.streamingMessageID ?? streamingMessageID,
                    let idx = messages.firstIndex(where: { $0.id == msgID }) {
@@ -2857,7 +2969,10 @@ if restoreSessionState(displayID: key) {
             // it only surfaces for backgrounded or non-active sessions. Was
             // previously compiled out of DEBUG builds entirely, which meant no
             // completion notification ever fired while backgrounded.
-            if payload.status == "complete" {
+            // Same reason as `completedTurn` above: only notify for a turn that
+            // was actually live here, or a drained post-Stop completion would
+            // push "your turn finished" for a turn the user cancelled.
+            if payload.status == "complete", wasStreaming {
                 NotificationService.shared.notifyTurnComplete(
                     sessionTitle: state.sessionTitle,
                     preview: payload.text.truncated(to: 80),
@@ -2964,7 +3079,14 @@ if restoreSessionState(displayID: key) {
             // doesn't resurrect an interrupted turn in the UI.
             guard let msgID = streamingMessageID,
                   let idx = messages.firstIndex(where: { $0.id == msgID }) else {
+                // Nothing to stamp, but the turn ended — settle the flags rather
+                // than leaving `isStreaming` latched on. See the same guard on
+                // the session-scoped path: a stuck flag both holds the avatar on
+                // "Thinking…" and blocks the next submit.
                 activeToolCalls = [:]
+                isStreaming = false
+                avatarState = .idle
+                isRemoteTurn = false
                 Task { await reasoningGraph.finalize() }
                 return
             }

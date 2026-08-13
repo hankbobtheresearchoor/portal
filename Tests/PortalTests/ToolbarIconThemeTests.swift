@@ -362,4 +362,23 @@ internal struct ToolbarIconThemeTests {
         #expect(ToolbarIconBackdrop.circle != ToolbarIconBackdrop.roundedSquare(7))
         #expect(ToolbarIconBackdrop.roundedSquare(7) != ToolbarIconBackdrop.roundedSquare(9))
     }
+
+    /// Tester feedback (issue #257): icon-only buttons were guessing games.
+    /// The tooltip is applied centrally by the `toolbarIcon` modifier from
+    /// `helpText`, so the guarantee to keep is that every slot HAS one and it
+    /// says something beyond restating the icon.
+    @Test("every toolbar slot carries a non-empty hover tooltip")
+    internal func everySlotHasHelpText() {
+        for slot in ToolbarIconSlot.allCases {
+            #expect(!slot.helpText.trimmingCharacters(in: .whitespaces).isEmpty,
+                    "\(slot.rawValue) has no tooltip")
+        }
+    }
+
+    @Test("cron's tooltip names scheduled tasks, not the clock glyph")
+    internal func cronTooltipNamesTheDestination() {
+        // The complaint verbatim: "I don't like having to guess that 🕘✅
+        // means scheduled tasks". The tooltip must answer that guess.
+        #expect(ToolbarIconSlot.cron.helpText.localizedCaseInsensitiveContains("scheduled"))
+    }
 }

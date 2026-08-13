@@ -211,6 +211,25 @@ internal enum ToolbarIconSlot: String, CaseIterable, Codable, Sendable, Identifi
         case .workflows: return "point.3.connected.trianglepath.dotted"
         }
     }
+
+    /// Hover tooltip. Names the DESTINATION in plain words — what opens when
+    /// you click — not the icon: a first-time user shouldn't have to click a
+    /// clock-with-checkmark to learn it means scheduled tasks. Applied by the
+    /// `toolbarIcon` modifier so no call site can forget it.
+    internal var helpText: String {
+        switch self {
+        case .settings: return "Settings"
+        case .sessions: return "Live sessions"
+        case .cron: return "Scheduled tasks"
+        case .activity: return "Activity inbox"
+        case .skills: return "Skills library"
+        case .feed: return "News feed"
+        case .learning: return "Learning — courses, quizzes, and flashcards"
+        case .wiki: return "Wiki knowledge graph"
+        case .artifacts: return "Living artifacts"
+        case .workflows: return "Workflow runs"
+        }
+    }
 }
 
 // MARK: - Resolution

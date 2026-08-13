@@ -50,8 +50,8 @@
            architecture compiler regenerates from source; keep them in step with
            the observatory's own header rather than counting by hand. -->
       <ul class="hero-stats" aria-label="Repository scale">
-        <li><strong>303</strong><span>Swift files</span></li>
-        <li><strong>88,684</strong><span>lines</span></li>
+        <li><strong>318</strong><span>Swift files</span></li>
+        <li><strong>92,355</strong><span>lines</span></li>
         <li><strong>1,055</strong><span>tests</span></li>
         <li><strong>87</strong><span>RPC methods &amp; events</span></li>
       </ul>
@@ -101,10 +101,12 @@
     <section class="band" id="features">
       <div class="band-head">
         <p class="eyebrow">FEATURE SET</p>
-        <h3>Eight surfaces</h3>
+        <h3>Ten surfaces</h3>
         <p class="lede">
           Every image below is a real render of the shipping SwiftUI view, captured
-          from the app's own code with sample data — not a mockup.
+          from the app's own code with sample data — not a mockup. Surfaces that can
+          only be captured against a live gateway are described in prose rather than
+          staged.
         </p>
       </div>
 
@@ -176,12 +178,12 @@
         </figure>
       </article>
 
-      <!-- Canvas / wiki. Prose only: the canvas and both wiki force graphs are
-           live-gateway surfaces, and every honest capture here is a real render
-           of shipping code — a staged mock-up would be the one lie on the page. -->
+      <!-- Canvas. Prose only: the canvas is a live-gateway surface, and every
+           honest capture here is a real render of shipping code — a staged
+           mock-up would be the one lie on the page. -->
       <article class="feature prose-only" id="canvas">
         <div class="feature-copy">
-          <p class="kicker">04 — CANVAS &amp; WIKI</p>
+          <p class="kicker">04 — CANVAS</p>
           <h4>Panels you arrange, not a layout you accept</h4>
           <p>
             The conversation is one resizable panel on a free-form canvas. Any
@@ -193,17 +195,56 @@
           <p>
             Panel kinds are registrable at runtime rather than a closed enum, so a
             saved layout referencing a lens this build doesn't know still loads —
-            it renders a placeholder instead of crashing. The wiki gets the same
-            treatment: an Obsidian-style browser with 2D and 3D force graphs and
-            an edit timeline.
+            it renders a placeholder instead of crashing.
           </p>
         </div>
       </article>
 
+      <!-- Wiki. The two force graphs are live-gateway surfaces and stay in
+           prose; the events page is a real render, so it's the figure. -->
+      <article class="feature reverse" id="wiki">
+        <div class="feature-copy">
+          <p class="kicker">05 — THE WIKI</p>
+          <h4>A knowledge base the agent keeps, with its sources shown</h4>
+          <p>
+            Not a document viewer. Pull requests, tickets, documents, Slack
+            directives and usage rollups are ingested as raw <em>events</em>, and
+            agents turn them into typed, wikilinked pages. The wiki's home is the
+            force graph itself — a 2D canvas by default, SceneKit in 3D as a
+            toggle — with a folder sidebar, a changeset drawer showing git-style
+            inline diffs, and a reader that docks over the still-live graph. You
+            can pin pages to compare them side by side.
+          </p>
+          <p>
+            The events page is where a vault stops being a folder of markdown and
+            starts being auditable. Every ingested source lands on one event-time
+            axis in a lane per kind, and plot and feed share a single selection —
+            click a dot, its row expands. A hollow diamond means the pipeline only
+            knew ingest time. A digest on the row is how you tell a re-ingest from
+            a genuinely new version. Where a backend records it, an event carries
+            the changesets it caused, so provenance walks event → changeset →
+            page without a second round trip.
+          </p>
+        </div>
+        <figure class="shot">
+          <img src="img/wikievents.png" alt="The wiki's ingestion events page: a legend with per-kind counts above a five-lane dot plot over ten days, beside an event feed whose selected GitHub PR row is expanded to show event time, ingested time, digest and source path." loading="lazy" width="2080" height="600">
+          <figcaption>One selection plane across both panes — the enlarged dot and the expanded row are the same event. Hollow diamonds are events with an estimated time.</figcaption>
+        </figure>
+      </article>
+
+      <!-- Full width: three x-aligned plots at half-column width would be
+           unreadable, the same reason the appearance proofs get their own row. -->
+      <div class="wide-shot">
+        <figure class="shot">
+          <img src="img/wikiaccrued.png" alt="The wiki's knowledge-accrued pane: four stat tiles, a cumulative revisions curve seeded from a pre-window baseline, and two x-aligned bar charts showing input events by kind above output page edits per day." loading="lazy" width="1800" height="1272">
+          <figcaption>Input against output on one shared time axis — events ingested per day above page edits per day, never dual-axed onto a single plot. The cumulative curve seeds at the revision count from before the window, so the height it starts at is true rather than zeroed.</figcaption>
+        </figure>
+      </div>
+
       <!-- Activity -->
       <article class="feature" id="activity">
         <div class="feature-copy">
-          <p class="kicker">05 — ACTIVITY INBOX</p>
+          <p class="kicker">06 — ACTIVITY INBOX</p>
           <h4>The things that need you, in one place</h4>
           <p>
             Tool approvals, clarification requests, artifact drops and failures
@@ -228,7 +269,7 @@
       <!-- Skills & cron -->
       <article class="feature reverse" id="cron">
         <div class="feature-copy">
-          <p class="kicker">06 — SKILLS &amp; CRON</p>
+          <p class="kicker">07 — SKILLS &amp; CRON</p>
           <h4>Schedule the agent, then watch what it did</h4>
           <p>
             Browse, edit and schedule agent skills; group cron jobs into
@@ -248,10 +289,48 @@
         </figure>
       </article>
 
+      <!-- Living artifacts / intents. Prose only for now: an honest capture is a
+           real generated world running against a live gateway, and the norm on
+           this page is that every figure is a real render of shipping code.
+           When that capture exists, drop it in as a figure here. -->
+      <article class="feature prose-only" id="artifacts">
+        <div class="feature-copy">
+          <p class="kicker">08 — LIVING ARTIFACTS</p>
+          <h4>Ask for a 3D world, then act inside it</h4>
+          <p>
+            An artifact is a named object the agent keeps across turns and
+            sessions, not a rendered message — it accumulates revisions instead of
+            being replaced. Ask for a walkable 3D world and you get one, hosted in
+            a real window with the mouse captured through Pointer Lock.
+          </p>
+          <p>
+            The part that matters is that the world is not a picture. Objects in it
+            can carry <em>declared intents</em>, so aiming the crosshair at
+            something and clicking dispatches a real backend action — including
+            kicking off a contained agent session you can then click straight into.
+            The same contract puts buttons on a dataset row.
+          </p>
+          <p>
+            Artifacts never carry executable authority. They declare intents as
+            data; the page markup is inert attributes with no script, fetch or
+            credential, and the host injects the only bridge that exists behind a
+            per-view nonce. The gateway re-resolves every click against the pinned
+            revision, and confirmation for anything destructive is native chrome
+            led by the server's own name for the action — not the artifact's label.
+          </p>
+          <p>
+            Sessions author and revise; crons maintain. An artifact declares which
+            jobs tend it, so the app can tell you <em>"a job refreshes this every
+            six hours"</em> rather than leaving you to guess whether something
+            written once is still true.
+          </p>
+        </div>
+      </article>
+
       <!-- Learning -->
       <article class="feature" id="learning">
         <div class="feature-copy">
-          <p class="kicker">07 — LEARNING</p>
+          <p class="kicker">09 — LEARNING</p>
           <h4>Turn a session into something you retain</h4>
           <p>
             Any conversation can become a structured course: ordered modules of
@@ -273,7 +352,7 @@
       <!-- Appearance -->
       <article class="feature reverse" id="appearance">
         <div class="feature-copy">
-          <p class="kicker">08 — APPEARANCE</p>
+          <p class="kicker">10 — APPEARANCE</p>
           <h4>Themes that reach every call site</h4>
           <p>
             Palette, button shape, toolbar icon treatment and app typeface are all
@@ -315,7 +394,7 @@
         <p class="eyebrow">ARCHITECTURE</p>
         <h3>How it's put together</h3>
         <p class="lede">
-          Five layers, twenty components, one strict dependency direction:
+          Five layers, twenty-one components, one strict dependency direction:
           <code>Models → Services → ViewModels → Views</code>. The interactive,
           source-backed model lives in the
           <a href="architecture/">Architecture Observatory</a>.
@@ -324,19 +403,19 @@
 
       <div class="layer-stack" aria-label="Architecture layers">
         <div class="layer" data-layer="experience">
-          <div class="layer-label"><span>Experience</span><em>6 components · 125 files</em></div>
+          <div class="layer-label"><span>Experience</span><em>6 components · 134 files</em></div>
           <p>SwiftUI surfaces — app shell, chat, operations, wiki, artifacts, thought graph.</p>
         </div>
         <div class="layer" data-layer="orchestration">
-          <div class="layer-label"><span>Orchestration</span><em>3 components · 18 files</em></div>
+          <div class="layer-label"><span>Orchestration</span><em>3 components · 19 files</em></div>
           <p><code>@MainActor</code> observable objects holding chat, operations and wiki state.</p>
         </div>
         <div class="layer" data-layer="integration">
-          <div class="layer-label"><span>Integration</span><em>4 components · 46 files</em></div>
-          <p>The backend contract, Hermes and Centaur clients, and device-local services.</p>
+          <div class="layer-label"><span>Integration</span><em>5 components · 52 files</em></div>
+          <p>The backend contract, Hermes and Centaur clients, the artifact-intent seam, and device-local services.</p>
         </div>
         <div class="layer" data-layer="foundation">
-          <div class="layer-label"><span>Foundation</span><em>3 components · 114 files</em></div>
+          <div class="layer-label"><span>Foundation</span><em>3 components · 113 files</em></div>
           <p>Value types, codable wire models, shared UI primitives and utilities.</p>
         </div>
         <div class="layer" data-layer="external">

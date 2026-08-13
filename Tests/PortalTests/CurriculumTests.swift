@@ -482,6 +482,23 @@ internal struct CurriculumParsingTests {
         #expect(questions.first?.explanation.isEmpty == true)
     }
 
+    @Test("a quiz step with no type field is detected by its questions alone")
+    internal func detectsQuizByQuestionsAlone() throws {
+        // The strict decoder requires `type` (non-optional in RawStep), so a
+        // step that omits it fails strict decode. The lenient parser then
+        // infers quiz-ness from the presence of `questions` — the fallback for
+        // an agent that writes a quiz without labeling it.
+        let json = """
+            {"curriculum":{"title":"T","modules":[{"title":"M","steps":[
+              {"title":"Q","questions":[
+                {"q":"Capital of France?","options":["A) Paris","B) Lyon"],
+                 "correct":"A","explanation":"Geography."}]}]}]}}
+            """
+        let course = try #require(CurriculumResponse.extract(from: json))
+        #expect(course.totalSteps == 1)
+        #expect(course.orderedSteps.first?.isQuiz == true)
+    }
+
     @Test("a parsed course starts with no progress")
     internal func parsedCourseHasNoProgress() throws {
         let course = try #require(CurriculumResponse.extract(from: wellFormed))

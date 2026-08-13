@@ -280,6 +280,7 @@
 		5B007BEC8BBCBFA8D8DE4523 /* BeautifulMermaid in Frameworks */ = {isa = PBXBuildFile; productRef = 1364723B97A9EA53B386901A /* BeautifulMermaid */; };
 		5B21B370401D8F8C9C4E317A /* MapExportRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19775F8FF34D0C811D1A5218 /* MapExportRenderer.swift */; };
 		5B4CF55F252F5EDDEDFC3DEA /* SkillGraph3DView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7679BE7B95A9A522FE3A8716 /* SkillGraph3DView.swift */; };
+		5C397A8DB6BA38D588EFA02C /* StuckStreamRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4FA75BA89BB21D0867535C /* StuckStreamRecoveryTests.swift */; };
 		5C434929EA1714D588922051 /* PanelResizeMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55F053C2D0C8CADA44499693 /* PanelResizeMathTests.swift */; };
 		5C74289EDEBFA77C921A9C2E /* WikiChangesetInlineDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FAA13E3F9FD3D2A0DC813D /* WikiChangesetInlineDiff.swift */; };
 		5C8E5426D95D11D06CC12A25 /* CurriculumStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694563F263FAF44A54A89E47 /* CurriculumStore.swift */; };
@@ -521,6 +522,7 @@
 		AE503166280EC565DF48725F /* WikiChangesetSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4EB0DFFC78682EEAB2515C /* WikiChangesetSource.swift */; };
 		AE550F55A7E1CA8CC7D505F4 /* ThoughtGraphNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AE618A82E60385625B36F89 /* ThoughtGraphNode.swift */; };
 		AEB52A4DB91661801B1AC029 /* CronListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5345D4F493040CE252399895 /* CronListViewModel.swift */; };
+		AECF0669D111F4829C7FD190 /* GatewayTransportLeakTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DC09F6FFCDDB56400D05E0 /* GatewayTransportLeakTests.swift */; };
 		AF717CDF83F30D9E293910D2 /* ArtifactActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC816DBAA5505324AD883A6 /* ArtifactActions.swift */; };
 		AF80CD3E7D84849062293715 /* CentaurWikiClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 524D795BBC83896922C37909 /* CentaurWikiClient.swift */; };
 		AF9166CC9B77A0DFF1D6A3EA /* CFAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 646A815661E6703CCAF37660 /* CFAuthView.swift */; };
@@ -711,6 +713,7 @@
 		EF5BA1B008BD8BA64D51BEFB /* ClarifyRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06E9202DE8361A6F71A9F7E /* ClarifyRequestTests.swift */; };
 		EFF90FB2505E5AA851CB04A2 /* PortalOfflineSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 250EB09F699471E388BC10E3 /* PortalOfflineSmokeUITests.swift */; };
 		F01D5AED671BA701DC7176C2 /* ArtifactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A02E263AEC6AE34AE912AF /* ArtifactStore.swift */; };
+		F020698A3CBA27F6CF88A7F9 /* ArtifactFullscreenIntentContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958F21132EE4D1699F2453A2 /* ArtifactFullscreenIntentContextTests.swift */; };
 		F02317A519998C0C37747B8C /* WikiEventTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F860E18D4A7E50128104782D /* WikiEventTimeline.swift */; };
 		F114E2D34CDFA73773409591 /* PushRegistrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32BA1CA8CCACEEBB1C97B7EF /* PushRegistrationService.swift */; };
 		F19CFF65596A85D8849DE213 /* SwiftMath in Frameworks */ = {isa = PBXBuildFile; productRef = 430B2CA1E22DD13601BD963B /* SwiftMath */; };
@@ -749,6 +752,7 @@
 		FA7618796F0E1D4F72C6F1BF /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = EEEDDEB051B56FBADB30719F /* MLXLMCommon */; };
 		FA98C10A1C08906F39105F39 /* TweetPostCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2528230688CC5940286A9C55 /* TweetPostCard.swift */; };
 		FB4BE5FB76F8034FFA8EC075 /* PortalButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849C1154A3B7777673AF9B3C /* PortalButtonStyle.swift */; };
+		FB8C3E4870F9E5138CED5A4F /* CanvasRelayoutGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0173AF8064C7B04D8CF8801D /* CanvasRelayoutGuardTests.swift */; };
 		FC29228143913AC2ECA42452 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5815387798570E917861661 /* SkillsViewModel.swift */; };
 		FC37C83DB22F87A4CC23526B /* WikiGraph2DCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5113F487FD4185AE7226B855 /* WikiGraph2DCanvas.swift */; };
 		FC38BAB849C9F3E2F57B0147 /* ConceptLinker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CFA18C2D0C8F14E47572C1 /* ConceptLinker.swift */; };
@@ -801,6 +805,7 @@
 		00F40D0A962137B83FB5BB65 /* CelebrationStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationStage.swift; sourceTree = "<group>"; };
 		0139E6B3DC11D97AFE8261C2 /* SpawnTreeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpawnTreeStore.swift; sourceTree = "<group>"; };
 		015E6939E5C8CBC3F89CF1B3 /* WikiEventTimelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiEventTimelineTests.swift; sourceTree = "<group>"; };
+		0173AF8064C7B04D8CF8801D /* CanvasRelayoutGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasRelayoutGuardTests.swift; sourceTree = "<group>"; };
 		01C73EE9E684A12438F66485 /* TimelineSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineSpec.swift; sourceTree = "<group>"; };
 		02361C8CFEB835C4EE815ECF /* MediaAttachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaAttachment.swift; sourceTree = "<group>"; };
 		0298148377BB74D6B73C19B7 /* GatewayDebugPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayDebugPanelView.swift; sourceTree = "<group>"; };
@@ -819,6 +824,7 @@
 		0A3591C0AF41F327701D87C1 /* TUISkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TUISkin.swift; sourceTree = "<group>"; };
 		0A8A43DD1E54D0C9FF6CEE36 /* XAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XAuthService.swift; sourceTree = "<group>"; };
 		0A9DB00CF24E0D67A792F30D /* KeychainStoreUpsertTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStoreUpsertTests.swift; sourceTree = "<group>"; };
+		0B4FA75BA89BB21D0867535C /* StuckStreamRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuckStreamRecoveryTests.swift; sourceTree = "<group>"; };
 		0BBDCEE4C7FC08F8C0062DC7 /* CelebrationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationPreferences.swift; sourceTree = "<group>"; };
 		0C74FA52D4C0E8DA1CA779AF /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		0D55468F628900177771F916 /* MathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathView.swift; sourceTree = "<group>"; };
@@ -1049,6 +1055,7 @@
 		94562E6D8D4F32997ACE811B /* ActivityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityStore.swift; sourceTree = "<group>"; };
 		94A456EA58E0312B70EB9276 /* SkillMarkdownEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillMarkdownEditor.swift; sourceTree = "<group>"; };
 		95450F797EE4865E40CA114A /* NativeChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeChartView.swift; sourceTree = "<group>"; };
+		958F21132EE4D1699F2453A2 /* ArtifactFullscreenIntentContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtifactFullscreenIntentContextTests.swift; sourceTree = "<group>"; };
 		966F0221DEACC5BE86FA501E /* CalendarSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSpec.swift; sourceTree = "<group>"; };
 		969D7459C6EAEA7FAB4E80B0 /* Model3DTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model3DTemplate.swift; sourceTree = "<group>"; };
 		9A3B7C2CDA9BA958D0AEFE82 /* ThinkingBeatsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingBeatsPanel.swift; sourceTree = "<group>"; };
@@ -1146,6 +1153,7 @@
 		D46CCFEE94C5027C5E48F55F /* MediaParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaParserTests.swift; sourceTree = "<group>"; };
 		D55A30D466FF8CA0ED2AB869 /* CurriculumCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurriculumCard.swift; sourceTree = "<group>"; };
 		D5798D1367ED862755773F47 /* GitHubLinkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubLinkCard.swift; sourceTree = "<group>"; };
+		D5DC09F6FFCDDB56400D05E0 /* GatewayTransportLeakTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayTransportLeakTests.swift; sourceTree = "<group>"; };
 		D73BDAD983F086DF3C33CC0E /* CelebrationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CelebrationManagerTests.swift; sourceTree = "<group>"; };
 		D7C731594AC06AB4D5256EBC /* HermesStandardClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesStandardClient.swift; sourceTree = "<group>"; };
 		D86516120E3F9F9C02CEE1C3 /* GatewayURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayURLTests.swift; sourceTree = "<group>"; };
@@ -1312,8 +1320,8 @@
 			isa = PBXGroup;
 			children = (
 				9F79BDEC8F95449BD40FE345 /* App */,
-				EC420DB82F3343AB7A53C0A7 /* portal */,
 				61851216B4FFCF80111C87E3 /* Portal */,
+				EC420DB82F3343AB7A53C0A7 /* portal */,
 				6CAC9983C0313333A70B780D /* PortalMacUITests */,
 				DC477657E808FF8E15CAA556 /* PortalTests */,
 				B166989F9AB9F4E8C3BDF340 /* PortalUITests */,
@@ -1329,6 +1337,15 @@
 				0A3591C0AF41F327701D87C1 /* TUISkin.swift */,
 			);
 			path = Skins;
+			sourceTree = "<group>";
+		};
+		EC420DB82F3343AB7A53C0A7 /* portal */ = {
+			isa = PBXGroup;
+			children = (
+				04096B720BF84A671AC5E21B /* Local.xcconfig */,
+			);
+			name = portal;
+			path = .;
 			sourceTree = "<group>";
 		};
 		478C43A556D1BB4322590DA6 /* MissionControl */ = {
@@ -1828,6 +1845,7 @@
 				1F906EEE885CFC04B7639A28 /* AppFontThemeTests.swift */,
 				4BABB326214CE2BF5CE19CDF /* ApprovalQueueTests.swift */,
 				BCD2E9C0991E1C9B7D50E565 /* ArchitectureTests.swift */,
+				958F21132EE4D1699F2453A2 /* ArtifactFullscreenIntentContextTests.swift */,
 				6123B6778763CDA474BCCD51 /* ArtifactIntentContractTests.swift */,
 				2B5D62361169F6B40127A7EA /* ArtifactIntentStoreTests.swift */,
 				3D8B1319CCE257066419871B /* ArtifactsPaneLayoutTests.swift */,
@@ -1835,6 +1853,7 @@
 				CBD0AE7AF15289D52F5BF54C /* BackendKindTests.swift */,
 				771C3D05CAE5E48B5A6AD239 /* BlockViewParserTests.swift */,
 				6794320152EABF823C879746 /* ButtonThemeTests.swift */,
+				0173AF8064C7B04D8CF8801D /* CanvasRelayoutGuardTests.swift */,
 				D73BDAD983F086DF3C33CC0E /* CelebrationManagerTests.swift */,
 				827A47D6E1A8CAFE71466664 /* CelebrationPreferencesTests.swift */,
 				F598AFF21B0CDB1D948A16D0 /* CentaurClientTests.swift */,
@@ -1861,6 +1880,7 @@
 				DECAC6D29226FF51607474DF /* GatewayReconnectTests.swift */,
 				8BF321CD02DCFB24525632CE /* GatewayRestartTests.swift */,
 				59ECEB7DE2961280C528A311 /* GatewaySessionConfigTests.swift */,
+				D5DC09F6FFCDDB56400D05E0 /* GatewayTransportLeakTests.swift */,
 				D86516120E3F9F9C02CEE1C3 /* GatewayURLTests.swift */,
 				C43D16EFC877DD5707B77E58 /* GitHubReleaseEmbedTests.swift */,
 				62C3C6AD6F18D1A7BA71169E /* HarnessPresentationTests.swift */,
@@ -1895,6 +1915,7 @@
 				FEEE68099D400B4874FE6079 /* SkillTests.swift */,
 				9C1C58002A6915CCEDB85A65 /* SRSEngineTests.swift */,
 				A1A2E27E012455718160A45D /* StandardManagementViewModelTests.swift */,
+				0B4FA75BA89BB21D0867535C /* StuckStreamRecoveryTests.swift */,
 				AD63814BE6C5063E6D308021 /* SubagentGraphIntegratorTests.swift */,
 				B45FA6A5C4912C0FFEA65FD1 /* ThemeCodeHighlightTests.swift */,
 				E804D7DE20A4CDB50DBEA166 /* ThoughtGraphLayoutEngineTests.swift */,
@@ -1926,15 +1947,6 @@
 				79F6FDC920B05016AE1743D3 /* JSONRPCResponse.swift */,
 			);
 			path = JSONRPC;
-			sourceTree = "<group>";
-		};
-		EC420DB82F3343AB7A53C0A7 /* portal */ = {
-			isa = PBXGroup;
-			children = (
-				04096B720BF84A671AC5E21B /* Local.xcconfig */,
-			);
-			name = portal;
-			path = .;
 			sourceTree = "<group>";
 		};
 		FB6E90D116D900F079442E44 /* Diagram */ = {
@@ -2533,6 +2545,7 @@
 				3CB20D672FEF5050452C3524 /* AppFontThemeTests.swift in Sources */,
 				562F7CBBD572235503719843 /* ApprovalQueueTests.swift in Sources */,
 				A1065EF2596CC96B6F4A4E24 /* ArchitectureTests.swift in Sources */,
+				F020698A3CBA27F6CF88A7F9 /* ArtifactFullscreenIntentContextTests.swift in Sources */,
 				1E826FA35F7907FDE5219175 /* ArtifactIntentContractTests.swift in Sources */,
 				CFBB8870B76CCFFC26E4334C /* ArtifactIntentStoreTests.swift in Sources */,
 				A00E8A06137A0415A10B6C44 /* ArtifactStatusReflectionTests.swift in Sources */,
@@ -2540,6 +2553,7 @@
 				D59500DEC6B9F779FBACFFAD /* BackendKindTests.swift in Sources */,
 				3252DB4C26A15DCABB4FC46E /* BlockViewParserTests.swift in Sources */,
 				2B1155CAAF64B8DE5C144055 /* ButtonThemeTests.swift in Sources */,
+				FB8C3E4870F9E5138CED5A4F /* CanvasRelayoutGuardTests.swift in Sources */,
 				525839E4A60214A40B537A8F /* CelebrationManagerTests.swift in Sources */,
 				FF74C28FBC418297C0E48D4C /* CelebrationPreferencesTests.swift in Sources */,
 				6DA7A10775592D29425C1F12 /* CentaurClientTests.swift in Sources */,
@@ -2566,6 +2580,7 @@
 				54721857179884CFC9A001C7 /* GatewayReconnectTests.swift in Sources */,
 				B9BA89886C0F01F19957E3EE /* GatewayRestartTests.swift in Sources */,
 				4946A50252D664AEF202973A /* GatewaySessionConfigTests.swift in Sources */,
+				AECF0669D111F4829C7FD190 /* GatewayTransportLeakTests.swift in Sources */,
 				DC5C31DFAA64B74E61537C15 /* GatewayURLTests.swift in Sources */,
 				CCF63735CEFA879284E4539B /* GitHubReleaseEmbedTests.swift in Sources */,
 				EE3F3B6D4EF4623AF48D9277 /* HTMLArtifactIntentBridgeTests.swift in Sources */,
@@ -2600,6 +2615,7 @@
 				5F23AC298E3A539F38841072 /* SkillTests.swift in Sources */,
 				BE5BE3147E14DF930DD4780C /* SkillsFilterStateTests.swift in Sources */,
 				99FEAEAF2893C19815A7CD17 /* StandardManagementViewModelTests.swift in Sources */,
+				5C397A8DB6BA38D588EFA02C /* StuckStreamRecoveryTests.swift in Sources */,
 				BDC88A99CB1C3D1B70CC0BEA /* SubagentGraphIntegratorTests.swift in Sources */,
 				12A70D29C3A4554EAFCB4BA3 /* ThemeCodeHighlightTests.swift in Sources */,
 				CDF783D3D45F37FE94F8CC04 /* ThoughtGraphLayoutEngineTests.swift in Sources */,

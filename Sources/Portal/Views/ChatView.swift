@@ -1069,7 +1069,14 @@ struct ChatView: View {
                 if !hasBotContent {
                     Task { @MainActor in
                         await Task.yield()
-                        avatarY = max(0, height - 72)
+                        // Same dead band as the sibling handler above, for the
+                        // same reason: this writes @State from a measurement of
+                        // the view it lays out, so an unguarded write re-measures
+                        // and can ping-pong forever. The empty-transcript path is
+                        // no less prone to it than the populated one.
+                        let target = max(0, height - 72)
+                        guard ChatLayoutMath.shouldMoveAvatar(from: avatarY, to: target) else { return }
+                        avatarY = target
                     }
                 }
             }

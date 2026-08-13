@@ -39,11 +39,21 @@ import os
 //   ChatViewModel feedback loop behind #254 was exactly this). To catch it, the
 //   observer also accumulates each completed busy interval, and the monitor
 //   computes the BUSY FRACTION over a rolling window: if the main thread is busy
-//   more than `stormBusyFraction` of any `stormWindowSeconds` window across many
-//   short turns, that's a storm. It samples the same suspended-thread stack and
+//   more than `stormBusyFraction` of any `stormWindowSeconds` window across more
+//   than one turn, that's a storm. It samples the same suspended-thread stack and
 //   fires the same fault — so the storm becomes visible to the tooling instead
 //   of only to a human watching the wheel. See #254 (the fix) + this detector
 //   (the tripwire that would have caught it).
+//
+// OBSERVER ORDER IS LOAD-BEARING
+//   Both shapes are measured by the run-loop bracket, and a bracket is only as
+//   good as its ordering. This file's first version marked busy/idle from one
+//   order-0 observer, which put SwiftUI's entire view-graph update — it runs
+//   inside a `beforeWaiting` observer — on the IDLE side of the bracket, and a
+//   main thread looping on layout at 100% CPU registered as 100% idle. See
+//   `busyObserverOrder` for the full account. The lesson generalizes: anything
+//   measuring a run-loop turn from inside that turn has to reason explicitly
+//   about who else is called out to, and when.
 //
 // The DETECTION machinery below compiles into BOTH debug and release builds —
 // so the same beachball that reached a user can be captured on their machine,
@@ -117,10 +127,78 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
     /// clear of normal streaming/animation load, which idles between frames.
     /// Override with `--storm-busy-fraction=N` (0–1).
     private let stormBusyFraction: Double
+    /// How long the busy fraction must stay saturated before it counts as a
+    /// storm. This is the line between a beachball and an animation, and it only
+    /// became necessary once the observer-ordering fix (see `busyObserverOrder`)
+    /// put framework work inside the measured span — which is where nearly all of
+    /// it lives.
+    ///
+    /// A UI animating at display refresh rate legitimately wakes the run loop
+    /// 120–150 times a second, and a few milliseconds of CoreAnimation commit per
+    /// frame is 80%+ of a 1s window. Measured on a real launch, that reported
+    /// "81% busy across 151 short turns" with a stack deep in
+    /// `CA::Context::commit_transaction` — a true reading of a perfectly healthy
+    /// app. Reporting it would be worse than useless: the CI gate runs under
+    /// `--hang-fatal`, so a false storm crashes the build on any animated launch,
+    /// and a tripwire that cries wolf gets disabled.
+    ///
+    /// Duration separates them cleanly. Animations are bounded — a transition, a
+    /// spinner, a scroll — and settle in well under a second. A relayout feedback
+    /// loop never settles: the beachball this was written for held 100% CPU for
+    /// fifteen minutes. 3s is comfortably longer than any animation this app runs
+    /// and still reports a real loop while the user is only starting to wonder why
+    /// the cursor is spinning.
+    private let stormSustainSeconds: TimeInterval = 3.0
+    /// When the busy fraction first crossed `stormBusyFraction` and stayed there.
+    /// Zero when not currently saturated. Guarded by `lock`.
+    private var stormSaturatedSince: CFAbsoluteTime = 0
+
     /// Don't call a brief flurry a storm: require the window to actually span
     /// the intended duration AND contain enough turns that this is a churn loop,
     /// not one heavy turn the hang detector already owns.
-    private let stormMinTurns = 20
+    ///
+    /// 2, not 20. The two detectors have to TILE the space, and at 20 they left a
+    /// gap wide enough to hide a beachball in: 20 turns saturating a 1s window
+    /// means each averages ~40ms, so a loop of, say, 8 turns of 100ms each pegs
+    /// the CPU exactly as hard while being rejected by the storm detector (too
+    /// few turns) *and* by the hang detector (each turn under 250ms). Two turns
+    /// is the minimum that distinguishes a loop from the single long turn the
+    /// hang path already owns — and `checkForStorm` only runs when no hang is in
+    /// progress, so that handoff stays clean. The busy FRACTION is what rules out
+    /// false positives here; the turn count only has to say "more than one".
+    private let stormMinTurns = 2
+
+    // MARK: Observer ordering (the blind spot this file shipped with)
+
+    /// CFRunLoop calls same-activity observers in ascending `order`, and that
+    /// ordering is the difference between seeing a beachball and being blind to
+    /// it. In a SwiftUI app nearly all of a turn's expensive work — the entire
+    /// view-graph update — runs *inside* a `beforeWaiting` observer:
+    ///
+    ///     __CFRunLoopDoObservers → NSRunLoop.flushObservers
+    ///       → NSHostingView.beginTransaction → Update.ensure
+    ///       → GraphHost.flushTransactions → AG::Graph::UpdateStack::update
+    ///
+    /// This watchdog originally registered ONE observer for both activities at
+    /// order 0 — the same order SwiftUI's uses — so ours ran first and marked
+    /// the thread idle immediately *before* the layout pass it was supposed to
+    /// be timing. Every millisecond of that pass then fell outside the busy
+    /// span: `checkForHang` bailed on `guard busy` and the storm detector summed
+    /// only the sliver of each turn preceding the flush. A main thread pegged at
+    /// 100% CPU in an infinite relayout loop read as 100% idle, and the
+    /// beachball this whole file exists to catch went unreported.
+    ///
+    /// Fix: bracket the turn from the OUTSIDE with two observers — mark busy
+    /// first among `afterWaiting` observers and idle LAST among `beforeWaiting`
+    /// ones — so a framework flush is inside the span whatever order it picks.
+    /// Finite sentinels rather than `CFIndex.min`/`.max`: these are already far
+    /// past any real framework order (CoreAnimation's commit observer is
+    /// 2_000_000) and leave no room for overflow in CFRunLoop's own comparisons.
+    /// `internal` so a test can assert the invariant that keeps us honest.
+    internal static let busyObserverOrder: CFIndex = -1_000_000_000
+    /// See `busyObserverOrder`. Must stay strictly greater than it, and greater
+    /// than any observer doing work we need to measure.
+    internal static let idleObserverOrder: CFIndex = 1_000_000_000
 
     private let lock = NSLock()
     private var isBusy = false
@@ -132,6 +210,10 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
     /// window. Appended on each `beforeWaiting`; summed by the monitor thread to
     /// compute the busy fraction. Guarded by `lock`.
     private var busyIntervals: [(start: CFAbsoluteTime, end: CFAbsoluteTime)] = []
+    /// When the last `beforeWaiting` fired. Lets `markIdle` attribute a span to
+    /// an iteration that never slept (and so never got an `afterWaiting`).
+    /// Guarded by `lock`. Zero until the first turn completes.
+    private var lastIdleAt: CFAbsoluteTime = 0
     /// Latch so a sustained storm reports once, not every poll. Cleared when the
     /// busy fraction falls back below the threshold (edge-triggered, like the
     /// hang latch clearing on the next `afterWaiting`).
@@ -141,7 +223,8 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
     /// not create a send right that must be deallocated (unlike
     /// `mach_thread_self`), so it's safe to cache.
     private var mainMachThread: thread_t = 0
-    private var observer: CFRunLoopObserver?
+    /// Two observers, not one — see `busyObserverOrder`.
+    private var observers: [CFRunLoopObserver] = []
     private var monitor: Thread?
     private var started = false
 
@@ -169,33 +252,27 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
         started = true
         mainMachThread = pthread_mach_thread_np(pthread_self())
 
-        // Observe the whole cycle so we can bracket each turn: afterWaiting
-        // (a turn begins) → beforeWaiting (the turn finished, going idle).
-        let activities = CFRunLoopActivity.afterWaiting.rawValue | CFRunLoopActivity.beforeWaiting.rawValue
-        let obs = CFRunLoopObserverCreateWithHandler(
-            kCFAllocatorDefault, activities, true, 0
-        ) { [weak self] _, activity in
-            guard let self else { return }
-            let now = CFAbsoluteTimeGetCurrent()
-            self.lock.lock()
-            if activity == .afterWaiting {
-                self.isBusy = true
-                self.busySince = now
-                self.reportedCurrentHang = false
-            } else if activity == .beforeWaiting {
-                // Turn finished — record its busy span so the monitor can sum
-                // busy time across many short turns (the storm signature). Prune
-                // here too so the array can't grow unbounded on the observer path.
-                if self.isBusy {
-                    self.busyIntervals.append((start: self.busySince, end: now))
-                    self.pruneBusyIntervals(before: now - self.stormWindowSeconds)
-                }
-                self.isBusy = false
-            }
-            self.lock.unlock()
+        // Bracket each turn from the OUTSIDE with two separately-ordered
+        // observers: busy first on afterWaiting, idle last on beforeWaiting.
+        // A single order-0 observer for both activities put SwiftUI's entire
+        // view-graph update — which runs inside a beforeWaiting observer — on
+        // the idle side of the bracket. See `busyObserverOrder`.
+        let begin = CFRunLoopObserverCreateWithHandler(
+            kCFAllocatorDefault, CFRunLoopActivity.afterWaiting.rawValue, true,
+            Self.busyObserverOrder
+        ) { [weak self] _, _ in
+            self?.markBusy(at: CFAbsoluteTimeGetCurrent())
         }
-        CFRunLoopAddObserver(CFRunLoopGetMain(), obs, .commonModes)
-        observer = obs
+        let end = CFRunLoopObserverCreateWithHandler(
+            kCFAllocatorDefault, CFRunLoopActivity.beforeWaiting.rawValue, true,
+            Self.idleObserverOrder
+        ) { [weak self] _, _ in
+            self?.markIdle(at: CFAbsoluteTimeGetCurrent())
+        }
+        for obs in [begin, end].compactMap({ $0 }) {
+            CFRunLoopAddObserver(CFRunLoopGetMain(), obs, .commonModes)
+            observers.append(obs)
+        }
 
         let t = Thread { [weak self] in self?.monitorLoop() }
         t.name = "com.ethenotethan.Portal.hang-watchdog"
@@ -212,6 +289,51 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
         let fatal = false  // release capture is log-only; --hang-fatal is compiled out
         #endif
         perfLog.debug("hang watchdog started (hang=\(ms)ms storm=\(stormPct)%/\(stormMs)ms fatal=\(fatal))")
+    }
+
+    /// A turn began. Split out of the observer handler so the two orders can
+    /// share one lock discipline (and so `start()` stays readable).
+    private func markBusy(at now: CFAbsoluteTime) {
+        lock.lock()
+        isBusy = true
+        busySince = now
+        reportedCurrentHang = false
+        lock.unlock()
+    }
+
+    /// The turn finished — record its busy span so the monitor can sum busy time
+    /// across many short turns (the storm signature). Prunes here too so the
+    /// array can't grow unbounded on the observer path.
+    ///
+    /// `afterWaiting` fires only after the loop actually SLEPT. When a turn
+    /// enqueues more work (a relayout invalidating layout again — the very loop
+    /// this detector hunts), CFRunLoop skips the sleep and comes straight back
+    /// around to `beforeWaiting`, so consecutive idle marks arrive with no busy
+    /// mark between them. Attributing nothing to those iterations would re-open
+    /// the blind spot one level down, so infer the span from the previous idle
+    /// mark: with no wait in between, every microsecond since then was spent
+    /// working. That inference is what makes a non-sleeping spin visible.
+    private func markIdle(at now: CFAbsoluteTime) {
+        lock.lock()
+        if isBusy {
+            busyIntervals.append((start: busySince, end: now))
+        } else if lastIdleAt != 0 {
+            // Cap the inferred span at the hang threshold rather than the whole
+            // window. An inference is a guess, and it must not be able to trip
+            // the detector by itself: the CI gate runs under `--hang-fatal`, so a
+            // false storm crashes the build. Capped at 250ms, one bad guess
+            // contributes at most a 0.25 fraction — well under the 0.8 threshold
+            // — while a real non-sleeping spin (many consecutive sub-threshold
+            // iterations, the signature that matters) is still counted in full on
+            // every iteration and sums past it. Bounded when wrong, exact when
+            // right.
+            let start = max(lastIdleAt, now - thresholdSeconds)
+            if now > start { busyIntervals.append((start: start, end: now)) }
+        }
+        pruneBusyIntervals(before: now - stormWindowSeconds)
+        isBusy = false
+        lastIdleAt = now
+        lock.unlock()
     }
 
     // MARK: Monitor loop (background thread)
@@ -256,31 +378,55 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
         return true
     }
 
-    /// Many short turns: sum the completed busy intervals over the rolling
-    /// window and, if the main thread was busy more than `stormBusyFraction` of
-    /// it across at least `stormMinTurns` turns, sample and report once. The
-    /// latch clears (edge-triggered) once the fraction drops back down, so a
-    /// storm that recurs after settling reports again.
+    /// Repeated turns with no idle between them: sum the busy intervals over the
+    /// rolling window — completed ones plus the turn in flight — and, if the main
+    /// thread was busy more than `stormBusyFraction` of it across at least
+    /// `stormMinTurns` turns, sample and report once. The latch clears
+    /// (edge-triggered) once the fraction drops back down, so a storm that
+    /// recurs after settling reports again.
     private func checkForStorm() {
         let now = CFAbsoluteTimeGetCurrent()
         let windowStart = now - stormWindowSeconds
 
         lock.lock()
         pruneBusyIntervals(before: windowStart)
-        let intervals = busyIntervals
+        var intervals = busyIntervals
+        // Include the turn in flight. Only completed intervals get appended (at
+        // beforeWaiting), so summing those alone systematically undercounts the
+        // fraction by however much of the current turn has elapsed — up to a full
+        // poll interval on every sample, in a metric whose whole job is to be
+        // compared against a threshold. `busySeconds` clips to the window, so an
+        // open span that started before it opened contributes only its tail.
+        if isBusy { intervals.append((start: busySince, end: now)) }
         let alreadyReported = reportedCurrentStorm
         lock.unlock()
 
         let busySeconds = Self.busySeconds(in: intervals, from: windowStart, to: now)
         let fraction = busySeconds / stormWindowSeconds
 
-        guard fraction >= stormBusyFraction, intervals.count >= stormMinTurns else {
-            if alreadyReported && fraction < stormBusyFraction {
-                lock.lock(); reportedCurrentStorm = false; lock.unlock()
-            }
-            return
+        // Track how long saturation has held, so a bounded animation (legitimately
+        // 80%+ busy while it runs) can be told apart from a loop that never ends.
+        let saturatedFor: TimeInterval
+        lock.lock()
+        if fraction >= stormBusyFraction {
+            if stormSaturatedSince == 0 { stormSaturatedSince = now }
+            saturatedFor = now - stormSaturatedSince
+        } else {
+            stormSaturatedSince = 0
+            saturatedFor = 0
         }
-        if alreadyReported { return }
+        lock.unlock()
+
+        let decision = Self.stormDecision(
+            busyFraction: fraction, turns: intervals.count,
+            threshold: stormBusyFraction, minTurns: stormMinTurns,
+            saturatedFor: saturatedFor, sustainSeconds: stormSustainSeconds,
+            alreadyReported: alreadyReported
+        )
+        if decision.clearLatch {
+            lock.lock(); reportedCurrentStorm = false; lock.unlock()
+        }
+        guard decision.report else { return }
 
         lock.lock(); reportedCurrentStorm = true; lock.unlock()
 
@@ -291,6 +437,34 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
         let frames = captureMainThreadStack()
         report(kind: .storm(turns: intervals.count), elapsed: busySeconds,
                busyFraction: fraction, frames: frames)
+    }
+
+    /// Whether this poll should report a storm, and whether the once-per-storm
+    /// latch should clear. Pure (no clock, no lock) so the tripwire's decision
+    /// can be tested directly: the live path only fires from a saturated real run
+    /// loop, and an end-to-end probe can't reach it (main-queue blocks don't run
+    /// during a launch with no window), so a bug here would otherwise be
+    /// invisible — which is precisely how the original ordering bug survived.
+    /// `internal` for `@testable` access.
+    /// `saturatedFor` is how long the fraction has been continuously above
+    /// `threshold`; a storm must sustain past `sustainSeconds` to be reported, so
+    /// bounded animation load never trips it. See `stormSustainSeconds`.
+    internal static func stormDecision(
+        busyFraction: Double, turns: Int, threshold: Double, minTurns: Int,
+        saturatedFor: TimeInterval, sustainSeconds: TimeInterval,
+        alreadyReported: Bool
+    ) -> (report: Bool, clearLatch: Bool) {
+        guard busyFraction >= threshold, turns >= minTurns else {
+            // Edge-triggered: only the fraction dropping back down rearms the
+            // latch, so a storm that settles and recurs reports again — but a
+            // window that merely thins below `minTurns` while still saturated
+            // does not re-arm and re-report the same ongoing storm.
+            return (report: false, clearLatch: alreadyReported && busyFraction < threshold)
+        }
+        // Saturated, but not yet for long enough to distinguish a stuck loop from
+        // an animation. Stay quiet and keep watching.
+        guard saturatedFor >= sustainSeconds else { return (report: false, clearLatch: false) }
+        return (report: !alreadyReported, clearLatch: false)
     }
 
     /// Drop busy intervals that ended before the window start. Caller holds
@@ -363,7 +537,8 @@ internal final class MainThreadWatchdog: @unchecked Sendable {
             header = """
             🔴 MAIN-THREAD STORM: main thread busy \(pct)% of the last \
             \(Int(stormWindowSeconds * 1000))ms across \(turns) short turns \
-            (threshold \(Int(stormBusyFraction * 100))%).
+            (threshold \(Int(stormBusyFraction * 100))%), sustained for over \
+            \(Int(stormSustainSeconds))s — long past any animation.
             This is a beachball with NO single slow turn — a churn/relayout loop \
             (the #254 SessionList↔ChatViewModel class). The stack below is one \
             sample of the loop; break the feedback cycle driving the re-renders.

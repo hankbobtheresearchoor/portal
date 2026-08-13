@@ -36,10 +36,10 @@
       "id": "app-shell",
       "label": "App shell",
       "layer": "experience",
-      "line_count": 4220
+      "line_count": 4240
     },
     {
-      "declaration_count": 75,
+      "declaration_count": 76,
       "declarations": [
         "AttachmentChipView",
         "AudioPreview",
@@ -61,6 +61,7 @@
         "ErrorBannerView",
         "FallbackLabel",
         "FallbackPreview",
+        "FilePreviewLayout",
         "FilePreviewView",
         "FileWebView",
         "FileWebViewNSView",
@@ -136,10 +137,10 @@
       "id": "chat-ui",
       "label": "Chat",
       "layer": "experience",
-      "line_count": 6810
+      "line_count": 6838
     },
     {
-      "declaration_count": 123,
+      "declaration_count": 133,
       "declarations": [
         "ActivityArtifactView",
         "ActivityAxes",
@@ -248,6 +249,16 @@
         "SkillGraphWebView",
         "SkillMarkdownEditor",
         "SkillMarkdownSheet",
+        "SkillsCanvasView",
+        "SkillsDetailPanel",
+        "SkillsEditorPanel",
+        "SkillsFilterState",
+        "SkillsFolderPanel",
+        "SkillsHubPanel",
+        "SkillsHubResultRow",
+        "SkillsListPanel",
+        "SkillsSearchPanel",
+        "SkillsStatsPanel",
         "SkillsView",
         "Slice",
         "SortOrder",
@@ -267,7 +278,7 @@
       ],
       "description": "Sessions, cron, activity, skills, learning, and mission-control surfaces.",
       "external": false,
-      "file_count": 39,
+      "file_count": 48,
       "files": [
         "Sources/Portal/Views/ActivityInboxView.swift",
         "Sources/Portal/Views/CentaurWorkflowActivityChart.swift",
@@ -307,12 +318,21 @@
         "Sources/Portal/Views/SessionUsageBadge.swift",
         "Sources/Portal/Views/SkillMarkdownEditor.swift",
         "Sources/Portal/Views/Skills/SkillGraph3DView.swift",
+        "Sources/Portal/Views/Skills/SkillsCanvasView.swift",
+        "Sources/Portal/Views/Skills/SkillsDetailPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsEditorPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsFilterState.swift",
+        "Sources/Portal/Views/Skills/SkillsFolderPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsHubPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsListPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsSearchPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsStatsPanel.swift",
         "Sources/Portal/Views/SkillsView.swift"
       ],
       "id": "operations-ui",
       "label": "Operations",
       "layer": "experience",
-      "line_count": 13922
+      "line_count": 15707
     },
     {
       "declaration_count": 37,
@@ -383,7 +403,7 @@
       "line_count": 5198
     },
     {
-      "declaration_count": 111,
+      "declaration_count": 112,
       "declarations": [
         "Artifact",
         "ArtifactActionControls",
@@ -394,6 +414,7 @@
         "ArtifactExportMenu",
         "ArtifactExportMenuMac",
         "ArtifactExporter",
+        "ArtifactFullscreenIntentContext",
         "ArtifactFullscreenWindowController",
         "ArtifactHTMLIntentView",
         "ArtifactHistoryView",
@@ -538,7 +559,7 @@
       "id": "artifact-ui",
       "label": "Artifacts",
       "layer": "experience",
-      "line_count": 10719
+      "line_count": 11117
     },
     {
       "declaration_count": 57,
@@ -628,7 +649,7 @@
       "id": "thought-graph-ui",
       "label": "Thought graph",
       "layer": "experience",
-      "line_count": 6999
+      "line_count": 7133
     },
     {
       "declaration_count": 7,
@@ -653,10 +674,10 @@
       "id": "chat-state",
       "label": "Chat state",
       "layer": "orchestration",
-      "line_count": 3801
+      "line_count": 4036
     },
     {
-      "declaration_count": 20,
+      "declaration_count": 21,
       "declarations": [
         "ActivityInboxViewModel",
         "CelebrationEvent",
@@ -667,6 +688,7 @@
         "DiagnosticTest",
         "FeedViewModel",
         "FilterStatus",
+        "GatewayRestartController",
         "HermesStandardCronManaging",
         "HermesStandardSkillManaging",
         "MilestoneLevel",
@@ -679,15 +701,16 @@
         "SoundEffects",
         "TimeWindow"
       ],
-      "description": "Session, cron, activity, feed, skill, settings, and learning state machines.",
+      "description": "Session, cron, activity, feed, skill, settings, gateway-lifecycle, and learning state machines.",
       "external": false,
-      "file_count": 10,
+      "file_count": 11,
       "files": [
         "Sources/Portal/ViewModels/ActivityInboxViewModel.swift",
         "Sources/Portal/ViewModels/CelebrationManager.swift",
         "Sources/Portal/ViewModels/CronFilterState.swift",
         "Sources/Portal/ViewModels/CronListViewModel.swift",
         "Sources/Portal/ViewModels/FeedViewModel.swift",
+        "Sources/Portal/ViewModels/GatewayRestartController.swift",
         "Sources/Portal/ViewModels/Learning/CurriculumViewModel.swift",
         "Sources/Portal/ViewModels/Quiz/QuizViewModel.swift",
         "Sources/Portal/ViewModels/SessionListViewModel.swift",
@@ -697,7 +720,7 @@
       "id": "operations-state",
       "label": "Operations state",
       "layer": "orchestration",
-      "line_count": 3037
+      "line_count": 3111
     },
     {
       "declaration_count": 5,
@@ -757,7 +780,7 @@
       "id": "backend-contract",
       "label": "Backend contract",
       "layer": "integration",
-      "line_count": 930
+      "line_count": 958
     },
     {
       "declaration_count": 28,
@@ -793,11 +816,12 @@
       ],
       "description": "Hermes WebSocket JSON-RPC transport and Hermes Standard HTTP/SSE management APIs.",
       "external": false,
-      "file_count": 9,
+      "file_count": 10,
       "files": [
         "Sources/Portal/Services/CronPoller.swift",
         "Sources/Portal/Services/GatewayClient+Feed.swift",
         "Sources/Portal/Services/GatewayClient+Push.swift",
+        "Sources/Portal/Services/GatewayClient+Restart.swift",
         "Sources/Portal/Services/GatewayClient+Wiki.swift",
         "Sources/Portal/Services/GatewayClient.swift",
         "Sources/Portal/Services/GatewayClientWrapper.swift",
@@ -808,7 +832,7 @@
       "id": "hermes-services",
       "label": "Hermes services",
       "layer": "integration",
-      "line_count": 4186
+      "line_count": 4314
     },
     {
       "declaration_count": 13,
@@ -842,10 +866,62 @@
       "line_count": 1208
     },
     {
-      "declaration_count": 75,
+      "declaration_count": 15,
+      "declarations": [
+        "ArtifactAction",
+        "ArtifactActionEngine",
+        "ArtifactActionInvokeResult",
+        "ArtifactIntentSessionLink",
+        "ArtifactStore",
+        "HTMLArtifactIntentBridge",
+        "HTMLArtifactIntentRequest",
+        "HTMLPointerLockBridge",
+        "IntentInvocationState",
+        "Kind",
+        "MaintainerRef",
+        "Outcome",
+        "PresentationRole",
+        "StatusMark",
+        "StatusToken"
+      ],
+      "description": "Declared-intent contract for living artifacts: inert artifact-authored declarations, the nonce-gated bridge out of untrusted artifact content, revision-pinned dispatch, maintainer references, and the native-only session click-through seam.",
+      "external": false,
+      "file_count": 6,
+      "files": [
+        "Sources/Portal/Models/ArtifactActions.swift",
+        "Sources/Portal/Models/ArtifactIntentSessionLink.swift",
+        "Sources/Portal/Models/HTMLArtifactIntentBridge.swift",
+        "Sources/Portal/Models/HTMLPointerLockBridge.swift",
+        "Sources/Portal/Models/MaintainerRef.swift",
+        "Sources/Portal/Services/ArtifactStore.swift"
+      ],
+      "id": "artifact-intents",
+      "label": "Artifact intents",
+      "layer": "integration",
+      "line_count": 1422
+    },
+    {
+      "declaration_count": 2,
+      "declarations": [
+        "WikiChangesetSource",
+        "WikiEventLogSource"
+      ],
+      "description": "Capability markers for knowledge backends: which source records an edit history, and which can report the ingestion events behind a page. Wiki surfaces gate their affordances on conformance rather than on backend identity. WikiSource and the Centaur-only timeline rollups are declared with the Centaur client and stay under centaur-services.",
+      "external": false,
+      "file_count": 2,
+      "files": [
+        "Sources/Portal/Services/WikiChangesetSource.swift",
+        "Sources/Portal/Services/WikiEventLogSource.swift"
+      ],
+      "id": "wiki-sources",
+      "label": "Wiki source contract",
+      "layer": "integration",
+      "line_count": 118
+    },
+    {
+      "declaration_count": 71,
       "declarations": [
         "AgentRun",
-        "ArtifactStore",
         "CacheEntry",
         "CachedSkillInfo",
         "CachedSkills",
@@ -869,7 +945,6 @@
         "HFTokenizerLoaderWrapper",
         "HFTokenizerWrapper",
         "HeuristicReasoningSummarizer",
-        "IntentInvocationState",
         "KeychainStore",
         "MLXReasoningSummarizer",
         "Metadata",
@@ -908,8 +983,6 @@
         "TweetEmbedText",
         "TweetFields",
         "VideoCache",
-        "WikiChangesetSource",
-        "WikiEventLogSource",
         "WikiGraphCache",
         "XAPIClient",
         "XAPIError",
@@ -922,9 +995,8 @@
       ],
       "description": "Persistence, export, media, notifications, caching, reasoning, and device-local support services.",
       "external": false,
-      "file_count": 30,
+      "file_count": 27,
       "files": [
-        "Sources/Portal/Services/ArtifactStore.swift",
         "Sources/Portal/Services/ChatHistoryStore.swift",
         "Sources/Portal/Services/CurriculumStore.swift",
         "Sources/Portal/Services/FileDownloadManager.swift",
@@ -948,8 +1020,6 @@
         "Sources/Portal/Services/TTSService.swift",
         "Sources/Portal/Services/TweetContentService.swift",
         "Sources/Portal/Services/VideoCache.swift",
-        "Sources/Portal/Services/WikiChangesetSource.swift",
-        "Sources/Portal/Services/WikiEventLogSource.swift",
         "Sources/Portal/Services/WikiGraphCache.swift",
         "Sources/Portal/Services/XAPIClient.swift",
         "Sources/Portal/Services/XAuthService.swift",
@@ -958,10 +1028,10 @@
       "id": "local-services",
       "label": "Local services",
       "layer": "integration",
-      "line_count": 6660
+      "line_count": 5959
     },
     {
-      "declaration_count": 223,
+      "declaration_count": 219,
       "declarations": [
         "ActivityAction",
         "ActivityArtifact",
@@ -974,11 +1044,7 @@
         "AnyCodable",
         "AppFontTheme",
         "ApprovalQueue",
-        "ArtifactAction",
-        "ArtifactActionEngine",
-        "ArtifactActionInvokeResult",
         "ArtifactGateway",
-        "ArtifactIntentSessionLink",
         "ArtifactMerge",
         "ArtifactRevision",
         "AvatarState",
@@ -1055,9 +1121,8 @@
         "FlashcardResponse",
         "GatewayCapabilities",
         "GatewayDebugSnapshot",
-        "HTMLArtifactIntentBridge",
-        "HTMLArtifactIntentRequest",
-        "HTMLPointerLockBridge",
+        "GatewayRestartPhase",
+        "GatewayRestartRequestOutcome",
         "Identicon",
         "IdenticonView",
         "IntegrationLink",
@@ -1070,7 +1135,6 @@
         "Kind",
         "Link",
         "LivingArtifact",
-        "MaintainerRef",
         "MediaAttachment",
         "MediaParser",
         "ModelCatalog",
@@ -1084,14 +1148,12 @@
         "NodeStatus",
         "NodeToolCall",
         "NodeTranscriptEntry",
-        "Outcome",
         "PageChange",
         "PanelKind",
         "PersistedQuizSession",
         "Persona",
         "PersonaImage",
         "PlacedNode",
-        "PresentationRole",
         "PromptBreakdown",
         "PromptSection",
         "Provider",
@@ -1128,6 +1190,10 @@
         "SessionUsage",
         "SharedEntity",
         "SharedEntityExtractor",
+        "SkillCategory",
+        "SkillCategoryGrouping",
+        "SkillCategoryNode",
+        "SkillCategoryRow",
         "SkillDocument",
         "SkillFileNode",
         "SkillGraph",
@@ -1143,8 +1209,6 @@
         "SpawnTreeEntry",
         "SpawnTreeSnapshot",
         "StatTileSpec",
-        "StatusMark",
-        "StatusToken",
         "SubagentRecord",
         "TaxonomyNode",
         "ThinkingBlock",
@@ -1169,6 +1233,8 @@
         "TouchedFileNode",
         "Trigger",
         "TurnGraphSnapshot",
+        "TurnSkillOrigin",
+        "TurnSkillRecord",
         "TweetMetrics",
         "View",
         "WikiChangesSummary",
@@ -1189,15 +1255,13 @@
       ],
       "description": "Value types and wire/domain models shared across user experiences and service adapters.",
       "external": false,
-      "file_count": 68,
+      "file_count": 66,
       "files": [
         "Sources/Portal/Models/ActivityItem.swift",
         "Sources/Portal/Models/ActivityStore.swift",
         "Sources/Portal/Models/AgentModel.swift",
         "Sources/Portal/Models/AppFontTheme.swift",
         "Sources/Portal/Models/ApprovalQueue.swift",
-        "Sources/Portal/Models/ArtifactActions.swift",
-        "Sources/Portal/Models/ArtifactIntentSessionLink.swift",
         "Sources/Portal/Models/ButtonTheme.swift",
         "Sources/Portal/Models/CalendarSpec.swift",
         "Sources/Portal/Models/CelebrationBeat.swift",
@@ -1219,15 +1283,13 @@
         "Sources/Portal/Models/FileTreeAggregator.swift",
         "Sources/Portal/Models/GatewayCapabilities.swift",
         "Sources/Portal/Models/GatewayDebugSnapshot.swift",
-        "Sources/Portal/Models/HTMLArtifactIntentBridge.swift",
-        "Sources/Portal/Models/HTMLPointerLockBridge.swift",
+        "Sources/Portal/Models/GatewayRestartOutcome.swift",
         "Sources/Portal/Models/Identicon.swift",
         "Sources/Portal/Models/JSONRPC/JSONRPCRequest.swift",
         "Sources/Portal/Models/JSONRPC/JSONRPCResponse.swift",
         "Sources/Portal/Models/KanbanSpec.swift",
         "Sources/Portal/Models/Learning/Curriculum.swift",
         "Sources/Portal/Models/LivingArtifact.swift",
-        "Sources/Portal/Models/MaintainerRef.swift",
         "Sources/Portal/Models/MediaAttachment.swift",
         "Sources/Portal/Models/ModelCatalog.swift",
         "Sources/Portal/Models/ModelProjections.swift",
@@ -1247,6 +1309,7 @@
         "Sources/Portal/Models/SessionTimelineEvent.swift",
         "Sources/Portal/Models/SharedEntity.swift",
         "Sources/Portal/Models/Skill.swift",
+        "Sources/Portal/Models/SkillCategory.swift",
         "Sources/Portal/Models/SkillModels.swift",
         "Sources/Portal/Models/SpawnNode.swift",
         "Sources/Portal/Models/SpawnTreeModels.swift",
@@ -1254,6 +1317,7 @@
         "Sources/Portal/Models/ThoughtGraphNode.swift",
         "Sources/Portal/Models/TimelineSpec.swift",
         "Sources/Portal/Models/ToolbarIconTheme.swift",
+        "Sources/Portal/Models/TurnSkillRecord.swift",
         "Sources/Portal/Models/WikiEventTimeline.swift",
         "Sources/Portal/Models/WikiEventTypeRegistry.swift",
         "Sources/Portal/Models/WikiGraph.swift",
@@ -1263,10 +1327,10 @@
       "id": "domain-models",
       "label": "Domain models",
       "layer": "foundation",
-      "line_count": 11472
+      "line_count": 11203
     },
     {
-      "declaration_count": 72,
+      "declaration_count": 73,
       "declarations": [
         "AppFontSettingsSection",
         "ApprovalBanner",
@@ -1296,6 +1360,7 @@
         "FlowResult",
         "GatewayAvatarPicker",
         "GatewayDebugPanelView",
+        "GatewayRestartSection",
         "GitHubLink",
         "GitHubLinkCard",
         "GitHubLinkKind",
@@ -1343,7 +1408,7 @@
       ],
       "description": "Reusable presentation primitives that are not owned by a single product surface.",
       "external": false,
-      "file_count": 31,
+      "file_count": 32,
       "files": [
         "Sources/Portal/Views/AppFontSettingsSection.swift",
         "Sources/Portal/Views/ApprovalBanner.swift",
@@ -1356,6 +1421,7 @@
         "Sources/Portal/Views/FlowLayout.swift",
         "Sources/Portal/Views/GatewayAvatarPicker.swift",
         "Sources/Portal/Views/GatewayDebugPanelView.swift",
+        "Sources/Portal/Views/GatewayRestartSection.swift",
         "Sources/Portal/Views/GitHubLinkCard.swift",
         "Sources/Portal/Views/GitHubReleaseCard.swift",
         "Sources/Portal/Views/HarnessConnectionStatus.swift",
@@ -1380,7 +1446,7 @@
       "id": "shared-ui",
       "label": "Shared UI",
       "layer": "foundation",
-      "line_count": 5949
+      "line_count": 6045
     },
     {
       "declaration_count": 27,
@@ -1436,7 +1502,7 @@
       "id": "utilities",
       "label": "Utilities",
       "layer": "foundation",
-      "line_count": 2203
+      "line_count": 2378
     },
     {
       "declaration_count": 0,
@@ -1538,6 +1604,42 @@
     },
     {
       "authority": "specified",
+      "description": "Wiki surfaces test the source for capability conformance to decide what to offer: the changeset drawer requires an edit history, the events plot and feed require an ingestion log. A missing affordance means the backend has nothing to show.",
+      "evidence": [
+        "Sources/Portal/Views/Wiki/WikiEventsPageView.swift",
+        "Sources/Portal/Views/Wiki/WikiGraphView.swift"
+      ],
+      "source": "wiki-ui",
+      "target": "wiki-sources",
+      "type": "depends_on",
+      "weight": 20
+    },
+    {
+      "authority": "specified",
+      "description": "The gateway serves the wiki graph, pages, changeset history and an event log whose entries carry the changesets they caused.",
+      "evidence": [
+        "Sources/Portal/Services/GatewayClient+Wiki.swift",
+        "Sources/Portal/Services/WikiChangesetSource.swift"
+      ],
+      "source": "wiki-sources",
+      "target": "hermes-services",
+      "type": "implemented_by",
+      "weight": 20
+    },
+    {
+      "authority": "specified",
+      "description": "The REST wiki-api serves the event log with directive attribution, plus the bucketed revision volume and baseline the knowledge-accrued pane needs.",
+      "evidence": [
+        "Sources/Portal/Services/CentaurWikiClient+Timeline.swift",
+        "Sources/Portal/Services/WikiEventLogSource.swift"
+      ],
+      "source": "wiki-sources",
+      "target": "centaur-services",
+      "type": "implemented_by",
+      "weight": 20
+    },
+    {
+      "authority": "specified",
       "description": "Conversation orchestration consumes the backend-neutral AgentBackend interface.",
       "evidence": [
         "Sources/Portal/Services/AgentBackend.swift",
@@ -1626,6 +1728,54 @@
       "source": "artifact-ui",
       "target": "domain-models",
       "type": "renders",
+      "weight": 20
+    },
+    {
+      "authority": "specified",
+      "description": "Artifact surfaces — including the generated 3D world hosted in its own window — render declared actions and dispatch clicks through the intent contract rather than acting on artifact content directly.",
+      "evidence": [
+        "Sources/Portal/Models/HTMLArtifactIntentBridge.swift",
+        "Sources/Portal/Views/ArtifactFullscreenWindow.swift"
+      ],
+      "source": "artifact-ui",
+      "target": "artifact-intents",
+      "type": "depends_on",
+      "weight": 20
+    },
+    {
+      "authority": "specified",
+      "description": "An intent click is dispatched as artifact.action.invoke/confirm against the pinned revision; the gateway resolves the registered handler from the binding ID.",
+      "evidence": [
+        "Sources/Portal/Services/ArtifactStore.swift",
+        "Sources/Portal/Services/GatewayClient.swift"
+      ],
+      "source": "artifact-intents",
+      "target": "hermes-services",
+      "type": "depends_on",
+      "weight": 20
+    },
+    {
+      "authority": "specified",
+      "description": "Declared maintainer references resolve against cron state, so the product can distinguish an artifact a job actively tends from one that is merely mutable.",
+      "evidence": [
+        "Sources/Portal/Models/MaintainerRef.swift",
+        "Sources/Portal/ViewModels/CronListViewModel.swift"
+      ],
+      "source": "artifact-intents",
+      "target": "operations-state",
+      "type": "depends_on",
+      "weight": 20
+    },
+    {
+      "authority": "specified",
+      "description": "When an intent runs as a contained agent session, native code posts the session switch; the untrusted artifact page is never handed a session ID or navigation capability.",
+      "evidence": [
+        "Sources/Portal/Models/ArtifactIntentSessionLink.swift",
+        "Sources/Portal/Views/ContentView.swift"
+      ],
+      "source": "artifact-intents",
+      "target": "app-shell",
+      "type": "navigates",
       "weight": 20
     },
     {
@@ -1764,7 +1914,7 @@
     },
     {
       "authority": "observed",
-      "description": "References 5 declaration(s) owned by local-services.",
+      "description": "References 4 declaration(s) owned by local-services.",
       "evidence": [
         "Sources/Portal/HermesNativeApp.swift",
         "Sources/Portal/Views/ContentView.swift",
@@ -1772,7 +1922,6 @@
       ],
       "source": "app-shell",
       "symbols": [
-        "ArtifactStore",
         "NotificationService",
         "SkillStore",
         "TTSService",
@@ -1780,7 +1929,7 @@
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 8
+      "weight": 7
     },
     {
       "authority": "observed",
@@ -1804,7 +1953,7 @@
     },
     {
       "authority": "observed",
-      "description": "References 13 declaration(s) owned by operations-ui.",
+      "description": "References 14 declaration(s) owned by operations-ui.",
       "evidence": [
         "Sources/Portal/Views/ContentView.swift"
       ],
@@ -1825,11 +1974,11 @@
       ],
       "target": "operations-ui",
       "type": "references",
-      "weight": 14
+      "weight": 15
     },
     {
       "authority": "observed",
-      "description": "References 12 declaration(s) owned by shared-ui.",
+      "description": "References 13 declaration(s) owned by shared-ui.",
       "evidence": [
         "Sources/Portal/Views/ContentView.swift",
         "Sources/Portal/Views/OnboardingView.swift",
@@ -1845,14 +1994,14 @@
         "ChatSkin",
         "GatewayAvatarPicker",
         "GatewayDebugPanelView",
+        "GatewayRestartSection",
         "HarnessConnectionSection",
         "HarnessStatusDot",
-        "Layout",
-        "PortalProgressView"
+        "Layout"
       ],
       "target": "shared-ui",
       "type": "references",
-      "weight": 15
+      "weight": 16
     },
     {
       "authority": "observed",
@@ -1870,6 +2019,62 @@
       "target": "utilities",
       "type": "references",
       "weight": 5
+    },
+    {
+      "authority": "observed",
+      "description": "References 2 declaration(s) owned by artifact-ui.",
+      "evidence": [
+        "Sources/Portal/Models/ArtifactActions.swift",
+        "Sources/Portal/Models/HTMLPointerLockBridge.swift"
+      ],
+      "source": "artifact-intents",
+      "symbols": [
+        "Artifact",
+        "InteractiveArtifactWeb"
+      ],
+      "target": "artifact-ui",
+      "type": "references",
+      "weight": 4
+    },
+    {
+      "authority": "observed",
+      "description": "References 8 declaration(s) owned by domain-models.",
+      "evidence": [
+        "Sources/Portal/Models/ArtifactActions.swift",
+        "Sources/Portal/Services/ArtifactStore.swift"
+      ],
+      "source": "artifact-intents",
+      "symbols": [
+        "AnyCodable",
+        "ArtifactGateway",
+        "ArtifactMerge",
+        "EntityRef",
+        "LivingArtifact",
+        "ModelSpec",
+        "Result",
+        "Session"
+      ],
+      "target": "domain-models",
+      "type": "references",
+      "weight": 10
+    },
+    {
+      "authority": "observed",
+      "description": "References 3 declaration(s) owned by local-services.",
+      "evidence": [
+        "Sources/Portal/Models/ArtifactActions.swift",
+        "Sources/Portal/Models/HTMLArtifactIntentBridge.swift",
+        "Sources/Portal/Services/ArtifactStore.swift"
+      ],
+      "source": "artifact-intents",
+      "symbols": [
+        "Entry",
+        "Page",
+        "SessionMetaSyncService"
+      ],
+      "target": "local-services",
+      "type": "references",
+      "weight": 6
     },
     {
       "authority": "observed",
@@ -1899,6 +2104,40 @@
     },
     {
       "authority": "observed",
+      "description": "References 10 declaration(s) owned by artifact-intents.",
+      "evidence": [
+        "Sources/Portal/Views/ArtifactCanvasView.swift",
+        "Sources/Portal/Views/ArtifactExpandedOverlay.swift",
+        "Sources/Portal/Views/ArtifactFullscreenWindow.swift",
+        "Sources/Portal/Views/ArtifactKindRenderer.swift",
+        "Sources/Portal/Views/ArtifactTopLevelActionBar.swift",
+        "Sources/Portal/Views/ArtifactsPane.swift",
+        "Sources/Portal/Views/Blocks/ArtifactMaintenanceSection.swift",
+        "Sources/Portal/Views/Blocks/ArtifactPanel.swift",
+        "Sources/Portal/Views/Blocks/ChecklistBlockView.swift",
+        "Sources/Portal/Views/Blocks/DatasetBlockView.swift",
+        "Sources/Portal/Views/Blocks/KanbanBlockView.swift",
+        "Sources/Portal/Views/Blocks/LivingArtifactCapture.swift"
+      ],
+      "source": "artifact-ui",
+      "symbols": [
+        "ArtifactAction",
+        "ArtifactIntentSessionLink",
+        "ArtifactStore",
+        "HTMLArtifactIntentBridge",
+        "HTMLArtifactIntentRequest",
+        "HTMLPointerLockBridge",
+        "IntentInvocationState",
+        "MaintainerRef",
+        "StatusMark",
+        "StatusToken"
+      ],
+      "target": "artifact-intents",
+      "type": "references",
+      "weight": 24
+    },
+    {
+      "authority": "observed",
       "description": "References 1 declaration(s) owned by chat-state.",
       "evidence": [
         "Sources/Portal/Views/ArtifactCanvasView.swift",
@@ -1918,7 +2157,7 @@
     },
     {
       "authority": "observed",
-      "description": "References 7 declaration(s) owned by chat-ui.",
+      "description": "References 8 declaration(s) owned by chat-ui.",
       "evidence": [
         "Sources/Portal/Views/ArtifactExporter.swift",
         "Sources/Portal/Views/ArtifactFullscreenWindow.swift",
@@ -1930,6 +2169,7 @@
       "source": "artifact-ui",
       "symbols": [
         "CodeBlockView",
+        "HTMLNavigationDelegate",
         "HTMLPreviewPresenter",
         "InlineHTMLNSView",
         "InlineHTMLView",
@@ -1939,29 +2179,27 @@
       ],
       "target": "chat-ui",
       "type": "references",
-      "weight": 13
+      "weight": 14
     },
     {
       "authority": "observed",
-      "description": "References 45 declaration(s) owned by domain-models.",
+      "description": "References 37 declaration(s) owned by domain-models.",
       "evidence": [
         "Sources/Portal/Views/ArtifactCanvasView.swift",
         "Sources/Portal/Views/ArtifactExpandedOverlay.swift",
         "Sources/Portal/Views/ArtifactExportMenu.swift",
         "Sources/Portal/Views/ArtifactExporter.swift",
-        "Sources/Portal/Views/ArtifactFullscreenWindow.swift",
         "Sources/Portal/Views/ArtifactKindRenderer.swift",
         "Sources/Portal/Views/ArtifactTopLevelActionBar.swift",
         "Sources/Portal/Views/ArtifactsPane.swift",
         "Sources/Portal/Views/Blocks/ArtifactMaintenanceSection.swift",
         "Sources/Portal/Views/Blocks/ArtifactPanel.swift",
         "Sources/Portal/Views/Blocks/ArtifactParseError.swift",
-        "Sources/Portal/Views/Blocks/CalendarBlockView.swift"
+        "Sources/Portal/Views/Blocks/CalendarBlockView.swift",
+        "Sources/Portal/Views/Blocks/ChecklistBlockView.swift"
       ],
       "source": "artifact-ui",
       "symbols": [
-        "ArtifactAction",
-        "ArtifactIntentSessionLink",
         "ArtifactRevision",
         "CalendarSpec",
         "Card",
@@ -1971,11 +2209,13 @@
         "ChartSeries",
         "ChartSpec",
         "ChartWaterfall",
-        "ChecklistSpec"
+        "ChecklistSpec",
+        "CronJob",
+        "DashboardLayout"
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 76
+      "weight": 67
     },
     {
       "authority": "observed",
@@ -1997,33 +2237,22 @@
     },
     {
       "authority": "observed",
-      "description": "References 6 declaration(s) owned by local-services.",
+      "description": "References 4 declaration(s) owned by local-services.",
       "evidence": [
-        "Sources/Portal/Views/ArtifactCanvasView.swift",
-        "Sources/Portal/Views/ArtifactExpandedOverlay.swift",
         "Sources/Portal/Views/ArtifactExporter.swift",
         "Sources/Portal/Views/ArtifactKindRenderer.swift",
-        "Sources/Portal/Views/ArtifactsPane.swift",
-        "Sources/Portal/Views/Blocks/ArtifactMaintenanceSection.swift",
-        "Sources/Portal/Views/Blocks/ArtifactPanel.swift",
-        "Sources/Portal/Views/Blocks/ChecklistBlockView.swift",
-        "Sources/Portal/Views/Blocks/DatasetBlockView.swift",
-        "Sources/Portal/Views/Blocks/KanbanBlockView.swift",
-        "Sources/Portal/Views/Blocks/LivingArtifactCapture.swift",
         "Sources/Portal/Views/Charts/NativeChartView.swift"
       ],
       "source": "artifact-ui",
       "symbols": [
-        "ArtifactStore",
         "ExportModelView",
-        "IntentInvocationState",
         "Page",
         "SessionExporter",
         "SessionPDFExporter"
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 18
+      "weight": 7
     },
     {
       "authority": "observed",
@@ -2310,7 +2539,7 @@
     },
     {
       "authority": "observed",
-      "description": "References 40 declaration(s) owned by domain-models.",
+      "description": "References 41 declaration(s) owned by domain-models.",
       "evidence": [
         "Sources/Portal/ViewModels/ChatViewModel.swift",
         "Sources/Portal/ViewModels/GatewayCapabilitiesStore.swift",
@@ -2334,7 +2563,7 @@
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 44
+      "weight": 45
     },
     {
       "authority": "observed",
@@ -2355,13 +2584,12 @@
     },
     {
       "authority": "observed",
-      "description": "References 12 declaration(s) owned by local-services.",
+      "description": "References 11 declaration(s) owned by local-services.",
       "evidence": [
         "Sources/Portal/ViewModels/ChatViewModel.swift"
       ],
       "source": "chat-state",
       "symbols": [
-        "ArtifactStore",
         "ChatHistoryStore",
         "CurriculumStore",
         "FileDownloadManager",
@@ -2376,7 +2604,7 @@
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 13
+      "weight": 12
     },
     {
       "authority": "observed",
@@ -2426,7 +2654,7 @@
     },
     {
       "authority": "observed",
-      "description": "References 4 declaration(s) owned by app-shell.",
+      "description": "References 5 declaration(s) owned by app-shell.",
       "evidence": [
         "Sources/Portal/Views/AttachmentChipView.swift",
         "Sources/Portal/Views/ChatView.swift",
@@ -2440,6 +2668,7 @@
       ],
       "source": "chat-ui",
       "symbols": [
+        "AppTheme",
         "ContentView",
         "SettingsView",
         "Theme",
@@ -2447,7 +2676,26 @@
       ],
       "target": "app-shell",
       "type": "references",
-      "weight": 13
+      "weight": 14
+    },
+    {
+      "authority": "observed",
+      "description": "References 5 declaration(s) owned by artifact-intents.",
+      "evidence": [
+        "Sources/Portal/Views/ChatView.swift",
+        "Sources/Portal/Views/MarkdownContentView.swift"
+      ],
+      "source": "chat-ui",
+      "symbols": [
+        "ArtifactStore",
+        "HTMLArtifactIntentBridge",
+        "HTMLArtifactIntentRequest",
+        "HTMLPointerLockBridge",
+        "StatusMark"
+      ],
+      "target": "artifact-intents",
+      "type": "references",
+      "weight": 7
     },
     {
       "authority": "observed",
@@ -2497,7 +2745,7 @@
     },
     {
       "authority": "observed",
-      "description": "References 27 declaration(s) owned by domain-models.",
+      "description": "References 23 declaration(s) owned by domain-models.",
       "evidence": [
         "Sources/Portal/Views/AttachmentChipView.swift",
         "Sources/Portal/Views/ChatView.swift",
@@ -2519,20 +2767,20 @@
         "DownloadState",
         "FileAttachment",
         "Flashcard",
-        "HTMLArtifactIntentBridge",
-        "HTMLArtifactIntentRequest",
-        "HTMLPointerLockBridge",
         "Item",
         "MediaAttachment",
-        "ModelCatalog"
+        "ModelCatalog",
+        "PanelKind",
+        "Persona",
+        "ResponseStyle"
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 38
+      "weight": 34
     },
     {
       "authority": "observed",
-      "description": "References 5 declaration(s) owned by local-services.",
+      "description": "References 4 declaration(s) owned by local-services.",
       "evidence": [
         "Sources/Portal/Views/AttachmentChipView.swift",
         "Sources/Portal/Views/ChatView.swift",
@@ -2541,7 +2789,6 @@
       ],
       "source": "chat-ui",
       "symbols": [
-        "ArtifactStore",
         "Document",
         "FileDownloadManager",
         "Page",
@@ -2549,7 +2796,7 @@
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 9
+      "weight": 8
     },
     {
       "authority": "observed",
@@ -2657,7 +2904,6 @@
       "authority": "observed",
       "description": "References 3 declaration(s) owned by app-shell.",
       "evidence": [
-        "Sources/Portal/Models/ArtifactIntentSessionLink.swift",
         "Sources/Portal/Models/ButtonTheme.swift",
         "Sources/Portal/Models/CelebrationPreferences.swift",
         "Sources/Portal/Models/ToolbarIconTheme.swift"
@@ -2670,29 +2916,49 @@
       ],
       "target": "app-shell",
       "type": "references",
-      "weight": 7
+      "weight": 6
     },
     {
       "authority": "observed",
-      "description": "References 5 declaration(s) owned by artifact-ui.",
+      "description": "References 6 declaration(s) owned by artifact-intents.",
       "evidence": [
-        "Sources/Portal/Models/ArtifactActions.swift",
+        "Sources/Portal/Models/ChecklistSpec.swift",
+        "Sources/Portal/Models/DashboardPanel.swift",
+        "Sources/Portal/Models/DomainProtocols.swift",
+        "Sources/Portal/Models/LivingArtifact.swift",
+        "Sources/Portal/Models/ModelCatalog.swift",
+        "Sources/Portal/Models/ModelSpec.swift"
+      ],
+      "source": "domain-models",
+      "symbols": [
+        "ArtifactAction",
+        "ArtifactActionEngine",
+        "ArtifactActionInvokeResult",
+        "ArtifactStore",
+        "MaintainerRef",
+        "Outcome"
+      ],
+      "target": "artifact-intents",
+      "type": "references",
+      "weight": 12
+    },
+    {
+      "authority": "observed",
+      "description": "References 3 declaration(s) owned by artifact-ui.",
+      "evidence": [
         "Sources/Portal/Models/ChartSpec.swift",
         "Sources/Portal/Models/ChatMessage.swift",
-        "Sources/Portal/Models/HTMLPointerLockBridge.swift",
         "Sources/Portal/Models/TimelineSpec.swift"
       ],
       "source": "domain-models",
       "symbols": [
-        "Artifact",
         "Format",
-        "InteractiveArtifactWeb",
         "NativeChartView",
         "TimelineBlockView"
       ],
       "target": "artifact-ui",
       "type": "references",
-      "weight": 10
+      "weight": 6
     },
     {
       "authority": "observed",
@@ -2733,22 +2999,24 @@
     },
     {
       "authority": "observed",
-      "description": "References 2 declaration(s) owned by chat-state.",
+      "description": "References 3 declaration(s) owned by chat-state.",
       "evidence": [
         "Sources/Portal/Models/DashboardPanel.swift",
         "Sources/Portal/Models/DelegationBatch.swift",
         "Sources/Portal/Models/DelegationBatchHistoryStore.swift",
         "Sources/Portal/Models/Persona.swift",
-        "Sources/Portal/Models/SavedGateway.swift"
+        "Sources/Portal/Models/SavedGateway.swift",
+        "Sources/Portal/Models/TurnSkillRecord.swift"
       ],
       "source": "domain-models",
       "symbols": [
+        "ChatViewModel",
         "PersonaManager",
         "SpawnTreeStore"
       ],
       "target": "chat-state",
       "type": "references",
-      "weight": 7
+      "weight": 9
     },
     {
       "authority": "observed",
@@ -2776,16 +3044,16 @@
       "authority": "observed",
       "description": "References 3 declaration(s) owned by hermes-services.",
       "evidence": [
-        "Sources/Portal/Models/ArtifactActions.swift",
         "Sources/Portal/Models/DomainProtocols.swift",
+        "Sources/Portal/Models/GatewayRestartOutcome.swift",
         "Sources/Portal/Models/SavedGateway.swift",
         "Sources/Portal/Models/WikiEventTimeline.swift",
         "Sources/Portal/Models/WikiEventTypeRegistry.swift"
       ],
       "source": "domain-models",
       "symbols": [
-        "Action",
         "GatewayClient",
+        "GatewayError",
         "WikiChangeset"
       ],
       "target": "hermes-services",
@@ -2794,14 +3062,10 @@
     },
     {
       "authority": "observed",
-      "description": "References 9 declaration(s) owned by local-services.",
+      "description": "References 7 declaration(s) owned by local-services.",
       "evidence": [
-        "Sources/Portal/Models/ArtifactActions.swift",
         "Sources/Portal/Models/CronRunHistory.swift",
-        "Sources/Portal/Models/DashboardPanel.swift",
-        "Sources/Portal/Models/DomainProtocols.swift",
         "Sources/Portal/Models/FeedArticle.swift",
-        "Sources/Portal/Models/HTMLArtifactIntentBridge.swift",
         "Sources/Portal/Models/Learning/Curriculum.swift",
         "Sources/Portal/Models/SavedGateway.swift",
         "Sources/Portal/Models/SpawnNode.swift",
@@ -2811,10 +3075,8 @@
       ],
       "source": "domain-models",
       "symbols": [
-        "ArtifactStore",
         "Document",
         "Entry",
-        "IntentInvocationState",
         "KeychainStore",
         "NotificationService",
         "Page",
@@ -2823,7 +3085,7 @@
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 21
+      "weight": 15
     },
     {
       "authority": "observed",
@@ -2850,19 +3112,22 @@
     },
     {
       "authority": "observed",
-      "description": "References 2 declaration(s) owned by operations-ui.",
+      "description": "References 4 declaration(s) owned by operations-ui.",
       "evidence": [
         "Sources/Portal/Models/DashboardPanel.swift",
-        "Sources/Portal/Models/Learning/Curriculum.swift"
+        "Sources/Portal/Models/Learning/Curriculum.swift",
+        "Sources/Portal/Models/SkillCategory.swift"
       ],
       "source": "domain-models",
       "symbols": [
         "LearningQuizCard",
-        "SessionsFilterState"
+        "SessionsFilterState",
+        "SkillCard",
+        "SkillsFilterState"
       ],
       "target": "operations-ui",
       "type": "references",
-      "weight": 4
+      "weight": 7
     },
     {
       "authority": "observed",
@@ -2886,14 +3151,16 @@
     },
     {
       "authority": "observed",
-      "description": "References 4 declaration(s) owned by thought-graph-ui.",
+      "description": "References 5 declaration(s) owned by thought-graph-ui.",
       "evidence": [
+        "Sources/Portal/Models/DashboardLayout.swift",
         "Sources/Portal/Models/DashboardPanel.swift",
         "Sources/Portal/Models/FileTreeAggregator.swift",
         "Sources/Portal/Models/ThoughtGraphNode.swift"
       ],
       "source": "domain-models",
       "symbols": [
+        "DashboardCanvasView",
         "PanelContext",
         "PanelRegistry",
         "ThoughtGraphLayoutEngine",
@@ -2901,15 +3168,16 @@
       ],
       "target": "thought-graph-ui",
       "type": "references",
-      "weight": 7
+      "weight": 9
     },
     {
       "authority": "observed",
-      "description": "References 4 declaration(s) owned by utilities.",
+      "description": "References 5 declaration(s) owned by utilities.",
       "evidence": [
         "Sources/Portal/Models/CalendarSpec.swift",
         "Sources/Portal/Models/ChartSpec.swift",
         "Sources/Portal/Models/ChecklistSpec.swift",
+        "Sources/Portal/Models/DashboardLayout.swift",
         "Sources/Portal/Models/KanbanSpec.swift",
         "Sources/Portal/Models/NetworkGraphSpec.swift",
         "Sources/Portal/Models/SankeySpec.swift",
@@ -2919,6 +3187,7 @@
       ],
       "source": "domain-models",
       "symbols": [
+        "ChatLayoutMath",
         "GatewayURL",
         "JSONObjectParse",
         "PerfCounter",
@@ -2926,7 +3195,24 @@
       ],
       "target": "utilities",
       "type": "references",
-      "weight": 13
+      "weight": 15
+    },
+    {
+      "authority": "observed",
+      "description": "References 3 declaration(s) owned by artifact-intents.",
+      "evidence": [
+        "Sources/Portal/Services/CronPoller.swift",
+        "Sources/Portal/Services/GatewayClient.swift"
+      ],
+      "source": "hermes-services",
+      "symbols": [
+        "ArtifactActionInvokeResult",
+        "ArtifactStore",
+        "MaintainerRef"
+      ],
+      "target": "artifact-intents",
+      "type": "references",
+      "weight": 5
     },
     {
       "authority": "observed",
@@ -2953,6 +3239,7 @@
         "Sources/Portal/Services/CronPoller.swift",
         "Sources/Portal/Services/GatewayClient+Feed.swift",
         "Sources/Portal/Services/GatewayClient+Push.swift",
+        "Sources/Portal/Services/GatewayClient+Restart.swift",
         "Sources/Portal/Services/GatewayClient+Wiki.swift",
         "Sources/Portal/Services/GatewayClient.swift",
         "Sources/Portal/Services/GatewayClientWrapper.swift",
@@ -2964,8 +3251,8 @@
         "ActivityArtifactContent",
         "ActivityItem",
         "AnyCodable",
-        "ArtifactActionInvokeResult",
         "ArtifactRevision",
+        "ChatMessage",
         "CronJob",
         "CronRunHistoryStore",
         "CronRunRecord",
@@ -2976,25 +3263,23 @@
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 61
+      "weight": 62
     },
     {
       "authority": "observed",
-      "description": "References 3 declaration(s) owned by local-services.",
+      "description": "References 2 declaration(s) owned by local-services.",
       "evidence": [
-        "Sources/Portal/Services/CronPoller.swift",
         "Sources/Portal/Services/GatewayClient+Wiki.swift",
         "Sources/Portal/Services/GatewayClient.swift"
       ],
       "source": "hermes-services",
       "symbols": [
-        "ArtifactStore",
         "Page",
         "SessionMetaSyncService"
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 6
+      "weight": 4
     },
     {
       "authority": "observed",
@@ -3076,23 +3361,18 @@
     },
     {
       "authority": "observed",
-      "description": "References 5 declaration(s) owned by centaur-services.",
+      "description": "References 2 declaration(s) owned by centaur-services.",
       "evidence": [
-        "Sources/Portal/Services/RawEventLog.swift",
-        "Sources/Portal/Services/WikiChangesetSource.swift",
-        "Sources/Portal/Services/WikiEventLogSource.swift"
+        "Sources/Portal/Services/RawEventLog.swift"
       ],
       "source": "local-services",
       "symbols": [
-        "CentaurWikiClient",
         "Frame",
-        "SSEParser",
-        "WikiEventTimelineProviding",
-        "WikiSource"
+        "SSEParser"
       ],
       "target": "centaur-services",
       "type": "references",
-      "weight": 8
+      "weight": 3
     },
     {
       "authority": "observed",
@@ -3117,9 +3397,8 @@
     },
     {
       "authority": "observed",
-      "description": "References 38 declaration(s) owned by domain-models.",
+      "description": "References 28 declaration(s) owned by domain-models.",
       "evidence": [
-        "Sources/Portal/Services/ArtifactStore.swift",
         "Sources/Portal/Services/ChatHistoryStore.swift",
         "Sources/Portal/Services/CurriculumStore.swift",
         "Sources/Portal/Services/FileDownloadManager.swift",
@@ -3130,26 +3409,27 @@
         "Sources/Portal/Services/ReasoningGraphIntegrator.swift",
         "Sources/Portal/Services/ReasoningSummarizer.swift",
         "Sources/Portal/Services/SRSEngine.swift",
-        "Sources/Portal/Services/SRSStore.swift"
+        "Sources/Portal/Services/SRSStore.swift",
+        "Sources/Portal/Services/SessionExporter.swift"
       ],
       "source": "local-services",
       "symbols": [
         "ActivityItem",
-        "AnyCodable",
-        "ArtifactAction",
-        "ArtifactActionEngine",
-        "ArtifactActionInvokeResult",
-        "ArtifactGateway",
-        "ArtifactMerge",
         "ChatMessage",
         "Curriculum",
         "DownloadState",
-        "EntityRef",
-        "EntitySet"
+        "EntitySet",
+        "Event",
+        "FeedReply",
+        "FeedTweetDetail",
+        "FileAttachment",
+        "FlashcardDeck",
+        "JSONRPCError",
+        "ModelProjections"
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 61
+      "weight": 49
     },
     {
       "authority": "observed",
@@ -3157,9 +3437,7 @@
       "evidence": [
         "Sources/Portal/Services/SessionMetaSyncService.swift",
         "Sources/Portal/Services/SkillCache.swift",
-        "Sources/Portal/Services/SkillStore.swift",
-        "Sources/Portal/Services/WikiChangesetSource.swift",
-        "Sources/Portal/Services/WikiEventLogSource.swift"
+        "Sources/Portal/Services/SkillStore.swift"
       ],
       "source": "local-services",
       "symbols": [
@@ -3168,7 +3446,7 @@
       ],
       "target": "hermes-services",
       "type": "references",
-      "weight": 7
+      "weight": 5
     },
     {
       "authority": "observed",
@@ -3269,13 +3547,14 @@
     },
     {
       "authority": "observed",
-      "description": "References 32 declaration(s) owned by domain-models.",
+      "description": "References 33 declaration(s) owned by domain-models.",
       "evidence": [
         "Sources/Portal/ViewModels/ActivityInboxViewModel.swift",
         "Sources/Portal/ViewModels/CelebrationManager.swift",
         "Sources/Portal/ViewModels/CronFilterState.swift",
         "Sources/Portal/ViewModels/CronListViewModel.swift",
         "Sources/Portal/ViewModels/FeedViewModel.swift",
+        "Sources/Portal/ViewModels/GatewayRestartController.swift",
         "Sources/Portal/ViewModels/Learning/CurriculumViewModel.swift",
         "Sources/Portal/ViewModels/Quiz/QuizViewModel.swift",
         "Sources/Portal/ViewModels/SessionListViewModel.swift",
@@ -3299,7 +3578,7 @@
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 42
+      "weight": 44
     },
     {
       "authority": "observed",
@@ -3308,6 +3587,7 @@
         "Sources/Portal/ViewModels/ActivityInboxViewModel.swift",
         "Sources/Portal/ViewModels/CronListViewModel.swift",
         "Sources/Portal/ViewModels/FeedViewModel.swift",
+        "Sources/Portal/ViewModels/GatewayRestartController.swift",
         "Sources/Portal/ViewModels/SessionListViewModel.swift",
         "Sources/Portal/ViewModels/SettingsViewModel.swift",
         "Sources/Portal/ViewModels/SkillsViewModel.swift"
@@ -3322,7 +3602,7 @@
       ],
       "target": "hermes-services",
       "type": "references",
-      "weight": 11
+      "weight": 12
     },
     {
       "authority": "observed",
@@ -3396,7 +3676,7 @@
       ],
       "target": "app-shell",
       "type": "references",
-      "weight": 40
+      "weight": 48
     },
     {
       "authority": "observed",
@@ -3442,6 +3722,8 @@
         "Sources/Portal/Views/Learning/CurriculumPlayerView.swift",
         "Sources/Portal/Views/Learning/LearningDashboardView.swift",
         "Sources/Portal/Views/SessionExportMenu.swift",
+        "Sources/Portal/Views/Skills/SkillsDetailPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsEditorPanel.swift",
         "Sources/Portal/Views/SkillsView.swift"
       ],
       "source": "operations-ui",
@@ -3452,11 +3734,11 @@
       ],
       "target": "chat-ui",
       "type": "references",
-      "weight": 11
+      "weight": 13
     },
     {
       "authority": "observed",
-      "description": "References 40 declaration(s) owned by domain-models.",
+      "description": "References 42 declaration(s) owned by domain-models.",
       "evidence": [
         "Sources/Portal/Views/ActivityInboxView.swift",
         "Sources/Portal/Views/CentaurWorkflowActivityChart.swift",
@@ -3488,7 +3770,7 @@
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 79
+      "weight": 90
     },
     {
       "authority": "observed",
@@ -3516,7 +3798,7 @@
       ],
       "target": "hermes-services",
       "type": "references",
-      "weight": 17
+      "weight": 18
     },
     {
       "authority": "observed",
@@ -3528,6 +3810,8 @@
         "Sources/Portal/Views/Quiz/FlashcardDeckView.swift",
         "Sources/Portal/Views/Quiz/SRSDashboardView.swift",
         "Sources/Portal/Views/SessionExportMenu.swift",
+        "Sources/Portal/Views/Skills/SkillsCanvasView.swift",
+        "Sources/Portal/Views/Skills/SkillsDetailPanel.swift",
         "Sources/Portal/Views/SkillsView.swift"
       ],
       "source": "operations-ui",
@@ -3547,7 +3831,7 @@
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 24
+      "weight": 26
     },
     {
       "authority": "observed",
@@ -3581,7 +3865,7 @@
       ],
       "target": "operations-state",
       "type": "references",
-      "weight": 35
+      "weight": 40
     },
     {
       "authority": "observed",
@@ -3598,7 +3882,7 @@
         "Sources/Portal/Views/MissionControl/SessionsDetailPanel.swift",
         "Sources/Portal/Views/SessionExportMenu.swift",
         "Sources/Portal/Views/SessionListView.swift",
-        "Sources/Portal/Views/SkillsView.swift"
+        "Sources/Portal/Views/Skills/SkillsCanvasView.swift"
       ],
       "source": "operations-ui",
       "symbols": [
@@ -3615,7 +3899,7 @@
       ],
       "target": "shared-ui",
       "type": "references",
-      "weight": 22
+      "weight": 27
     },
     {
       "authority": "observed",
@@ -3624,7 +3908,13 @@
         "Sources/Portal/Views/MissionControl/CronDashboardCanvas.swift",
         "Sources/Portal/Views/MissionControl/SessionsDashboardCanvas.swift",
         "Sources/Portal/Views/MissionControl/SessionsSourceBreakdown.swift",
-        "Sources/Portal/Views/MissionControl/SessionsTimelinePlot.swift"
+        "Sources/Portal/Views/MissionControl/SessionsTimelinePlot.swift",
+        "Sources/Portal/Views/Skills/SkillsCanvasView.swift",
+        "Sources/Portal/Views/Skills/SkillsDetailPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsEditorPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsFolderPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsHubPanel.swift",
+        "Sources/Portal/Views/Skills/SkillsListPanel.swift"
       ],
       "source": "operations-ui",
       "symbols": [
@@ -3636,7 +3926,7 @@
       ],
       "target": "thought-graph-ui",
       "type": "references",
-      "weight": 9
+      "weight": 15
     },
     {
       "authority": "observed",
@@ -3644,6 +3934,7 @@
       "evidence": [
         "Sources/Portal/Views/CronListView.swift",
         "Sources/Portal/Views/FeedView.swift",
+        "Sources/Portal/Views/Skills/SkillsCanvasView.swift",
         "Sources/Portal/Views/SkillsView.swift"
       ],
       "source": "operations-ui",
@@ -3654,7 +3945,7 @@
       ],
       "target": "utilities",
       "type": "references",
-      "weight": 6
+      "weight": 7
     },
     {
       "authority": "observed",
@@ -3667,11 +3958,11 @@
         "Sources/Portal/Views/ExportPrimitives.swift",
         "Sources/Portal/Views/GatewayAvatarPicker.swift",
         "Sources/Portal/Views/GatewayDebugPanelView.swift",
+        "Sources/Portal/Views/GatewayRestartSection.swift",
         "Sources/Portal/Views/GitHubLinkCard.swift",
         "Sources/Portal/Views/GitHubReleaseCard.swift",
         "Sources/Portal/Views/HarnessConnectionStatus.swift",
-        "Sources/Portal/Views/InAppBrowserView.swift",
-        "Sources/Portal/Views/MilestoneCardView.swift"
+        "Sources/Portal/Views/InAppBrowserView.swift"
       ],
       "source": "shared-ui",
       "symbols": [
@@ -3681,7 +3972,7 @@
       ],
       "target": "app-shell",
       "type": "references",
-      "weight": 26
+      "weight": 27
     },
     {
       "authority": "observed",
@@ -3701,19 +3992,21 @@
     },
     {
       "authority": "observed",
-      "description": "References 2 declaration(s) owned by chat-state.",
+      "description": "References 3 declaration(s) owned by chat-state.",
       "evidence": [
         "Sources/Portal/Views/ApprovalBanner.swift",
-        "Sources/Portal/Views/GatewayAvatarPicker.swift"
+        "Sources/Portal/Views/GatewayAvatarPicker.swift",
+        "Sources/Portal/Views/GatewayRestartSection.swift"
       ],
       "source": "shared-ui",
       "symbols": [
         "ChatViewModel",
+        "GatewayCapabilitiesStore",
         "PersonaManager"
       ],
       "target": "chat-state",
       "type": "references",
-      "weight": 4
+      "weight": 6
     },
     {
       "authority": "observed",
@@ -3753,8 +4046,8 @@
         "Sources/Portal/Views/ExportPrimitives.swift",
         "Sources/Portal/Views/GatewayAvatarPicker.swift",
         "Sources/Portal/Views/GatewayDebugPanelView.swift",
-        "Sources/Portal/Views/GitHubLinkCard.swift",
-        "Sources/Portal/Views/GitHubReleaseCard.swift"
+        "Sources/Portal/Views/GatewayRestartSection.swift",
+        "Sources/Portal/Views/GitHubLinkCard.swift"
       ],
       "source": "shared-ui",
       "symbols": [
@@ -3773,13 +4066,14 @@
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 62
+      "weight": 63
     },
     {
       "authority": "observed",
       "description": "References 5 declaration(s) owned by hermes-services.",
       "evidence": [
         "Sources/Portal/Views/GatewayDebugPanelView.swift",
+        "Sources/Portal/Views/GatewayRestartSection.swift",
         "Sources/Portal/Views/HarnessConnectionStatus.swift",
         "Sources/Portal/Views/Prompt/PromptBreakdownView.swift",
         "Sources/Portal/Views/TweetPostCard.swift"
@@ -3794,7 +4088,7 @@
       ],
       "target": "hermes-services",
       "type": "references",
-      "weight": 9
+      "weight": 10
     },
     {
       "authority": "observed",
@@ -3823,22 +4117,24 @@
     },
     {
       "authority": "observed",
-      "description": "References 3 declaration(s) owned by operations-state.",
+      "description": "References 4 declaration(s) owned by operations-state.",
       "evidence": [
         "Sources/Portal/Views/CelebrationSettingsSection.swift",
         "Sources/Portal/Views/CelebrationStage.swift",
         "Sources/Portal/Views/GatewayAvatarPicker.swift",
+        "Sources/Portal/Views/GatewayRestartSection.swift",
         "Sources/Portal/Views/HarnessConnectionStatus.swift"
       ],
       "source": "shared-ui",
       "symbols": [
         "CelebrationEvent",
         "CelebrationManager",
+        "GatewayRestartController",
         "SettingsViewModel"
       ],
       "target": "operations-state",
       "type": "references",
-      "weight": 7
+      "weight": 9
     },
     {
       "authority": "observed",
@@ -3883,6 +4179,22 @@
     },
     {
       "authority": "observed",
+      "description": "References 1 declaration(s) owned by artifact-intents.",
+      "evidence": [
+        "Sources/Portal/Views/ThoughtGraph/ArtifactsPanel.swift",
+        "Sources/Portal/Views/ThoughtGraph/PanelRegistry.swift",
+        "Sources/Portal/Views/ThoughtGraph/SessionChatCanvas.swift"
+      ],
+      "source": "thought-graph-ui",
+      "symbols": [
+        "ArtifactStore"
+      ],
+      "target": "artifact-intents",
+      "type": "references",
+      "weight": 4
+    },
+    {
+      "authority": "observed",
       "description": "References 2 declaration(s) owned by artifact-ui.",
       "evidence": [
         "Sources/Portal/Views/ThoughtGraph/ArtifactsPanel.swift",
@@ -3906,9 +4218,7 @@
         "Sources/Portal/Views/ThoughtGraph/InlineTurnTimelineStrip.swift",
         "Sources/Portal/Views/ThoughtGraph/PanelRegistry.swift",
         "Sources/Portal/Views/ThoughtGraph/SessionChatCanvas.swift",
-        "Sources/Portal/Views/ThoughtGraph/SessionGraphPane.swift",
-        "Sources/Portal/Views/ThoughtGraph/SessionThoughtGraphView.swift",
-        "Sources/Portal/Views/ThoughtGraph/TurnSkillsLens.swift"
+        "Sources/Portal/Views/ThoughtGraph/SessionGraphPane.swift"
       ],
       "source": "thought-graph-ui",
       "symbols": [
@@ -3918,7 +4228,7 @@
       ],
       "target": "chat-state",
       "type": "references",
-      "weight": 11
+      "weight": 9
     },
     {
       "authority": "observed",
@@ -3945,7 +4255,7 @@
     },
     {
       "authority": "observed",
-      "description": "References 31 declaration(s) owned by domain-models.",
+      "description": "References 32 declaration(s) owned by domain-models.",
       "evidence": [
         "Sources/Portal/Views/AgentPanel.swift",
         "Sources/Portal/Views/DelegationBatchNoticeView.swift",
@@ -3977,7 +4287,7 @@
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 50
+      "weight": 51
     },
     {
       "authority": "observed",
@@ -3996,19 +4306,16 @@
     },
     {
       "authority": "observed",
-      "description": "References 5 declaration(s) owned by local-services.",
+      "description": "References 4 declaration(s) owned by local-services.",
       "evidence": [
-        "Sources/Portal/Views/ThoughtGraph/ArtifactsPanel.swift",
         "Sources/Portal/Views/ThoughtGraph/ConversationPanel.swift",
         "Sources/Portal/Views/ThoughtGraph/InlineTurnTimelineStrip.swift",
-        "Sources/Portal/Views/ThoughtGraph/PanelRegistry.swift",
         "Sources/Portal/Views/ThoughtGraph/SessionChatCanvas.swift",
         "Sources/Portal/Views/ThoughtGraph/SessionGraphPane.swift",
         "Sources/Portal/Views/ThoughtGraph/ThoughtGraphLayoutEngine.swift"
       ],
       "source": "thought-graph-ui",
       "symbols": [
-        "ArtifactStore",
         "Page",
         "ReasoningGraphIntegrator",
         "SubagentGraphIntegrator",
@@ -4016,7 +4323,7 @@
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 12
+      "weight": 9
     },
     {
       "authority": "observed",
@@ -4060,8 +4367,9 @@
     },
     {
       "authority": "observed",
-      "description": "References 3 declaration(s) owned by utilities.",
+      "description": "References 4 declaration(s) owned by utilities.",
       "evidence": [
+        "Sources/Portal/Views/ThoughtGraph/DashboardCanvasView.swift",
         "Sources/Portal/Views/ThoughtGraph/SessionChatCanvas.swift",
         "Sources/Portal/Views/ThoughtGraph/SessionFileTreePane.swift",
         "Sources/Portal/Views/ThoughtGraph/ThoughtGraphLayoutEngine.swift",
@@ -4069,13 +4377,14 @@
       ],
       "source": "thought-graph-ui",
       "symbols": [
+        "ChatLayoutMath",
         "Constants",
         "FocusableTextView",
         "RenderMemo"
       ],
       "target": "utilities",
       "type": "references",
-      "weight": 7
+      "weight": 9
     },
     {
       "authority": "observed",
@@ -4095,37 +4404,37 @@
     },
     {
       "authority": "observed",
-      "description": "References 3 declaration(s) owned by domain-models.",
+      "description": "References 4 declaration(s) owned by domain-models.",
       "evidence": [
         "Sources/Portal/Utilities/Extensions.swift",
+        "Sources/Portal/Utilities/MainThreadWatchdog.swift",
         "Sources/Portal/Utilities/PerfCounter.swift"
       ],
       "source": "utilities",
       "symbols": [
         "AnyCodable",
+        "Edge",
         "NetworkGraphLayout",
         "SankeyLayout"
       ],
       "target": "domain-models",
       "type": "references",
-      "weight": 5
+      "weight": 7
     },
     {
       "authority": "observed",
-      "description": "References 3 declaration(s) owned by local-services.",
+      "description": "References 2 declaration(s) owned by local-services.",
       "evidence": [
-        "Sources/Portal/Utilities/Extensions.swift",
         "Sources/Portal/Utilities/HermesNativeDeepLink.swift"
       ],
       "source": "utilities",
       "symbols": [
-        "ArtifactStore",
         "NotificationService",
         "XAuthService"
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 5
+      "weight": 3
     },
     {
       "authority": "observed",
@@ -4142,6 +4451,38 @@
       "target": "shared-ui",
       "type": "references",
       "weight": 4
+    },
+    {
+      "authority": "observed",
+      "description": "References 3 declaration(s) owned by centaur-services.",
+      "evidence": [
+        "Sources/Portal/Services/WikiChangesetSource.swift",
+        "Sources/Portal/Services/WikiEventLogSource.swift"
+      ],
+      "source": "wiki-sources",
+      "symbols": [
+        "CentaurWikiClient",
+        "WikiEventTimelineProviding",
+        "WikiSource"
+      ],
+      "target": "centaur-services",
+      "type": "references",
+      "weight": 5
+    },
+    {
+      "authority": "observed",
+      "description": "References 1 declaration(s) owned by hermes-services.",
+      "evidence": [
+        "Sources/Portal/Services/WikiChangesetSource.swift",
+        "Sources/Portal/Services/WikiEventLogSource.swift"
+      ],
+      "source": "wiki-sources",
+      "symbols": [
+        "GatewayClient"
+      ],
+      "target": "hermes-services",
+      "type": "references",
+      "weight": 3
     },
     {
       "authority": "observed",
@@ -4203,20 +4544,33 @@
     },
     {
       "authority": "observed",
-      "description": "References 4 declaration(s) owned by local-services.",
+      "description": "References 2 declaration(s) owned by local-services.",
       "evidence": [
         "Sources/Portal/ViewModels/WikiGraphViewModel.swift"
       ],
       "source": "wiki-state",
       "symbols": [
         "Page",
-        "WikiChangesetSource",
-        "WikiEventLogSource",
         "WikiGraphCache"
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 5
+      "weight": 3
+    },
+    {
+      "authority": "observed",
+      "description": "References 2 declaration(s) owned by wiki-sources.",
+      "evidence": [
+        "Sources/Portal/ViewModels/WikiGraphViewModel.swift"
+      ],
+      "source": "wiki-state",
+      "symbols": [
+        "WikiChangesetSource",
+        "WikiEventLogSource"
+      ],
+      "target": "wiki-sources",
+      "type": "references",
+      "weight": 3
     },
     {
       "authority": "observed",
@@ -4336,24 +4690,20 @@
     },
     {
       "authority": "observed",
-      "description": "References 3 declaration(s) owned by local-services.",
+      "description": "References 1 declaration(s) owned by local-services.",
       "evidence": [
         "Sources/Portal/Views/Wiki/WikiEventTimelineCharts.swift",
-        "Sources/Portal/Views/Wiki/WikiEventsPageView.swift",
-        "Sources/Portal/Views/Wiki/WikiGraphControlsBar.swift",
         "Sources/Portal/Views/Wiki/WikiGraphView.swift",
         "Sources/Portal/Views/Wiki/WikiPageEditorView.swift",
         "Sources/Portal/Views/Wiki/WikiTimelineView.swift"
       ],
       "source": "wiki-ui",
       "symbols": [
-        "Page",
-        "WikiChangesetSource",
-        "WikiEventLogSource"
+        "Page"
       ],
       "target": "local-services",
       "type": "references",
-      "weight": 9
+      "weight": 5
     },
     {
       "authority": "observed",
@@ -4375,6 +4725,23 @@
       "target": "shared-ui",
       "type": "references",
       "weight": 9
+    },
+    {
+      "authority": "observed",
+      "description": "References 2 declaration(s) owned by wiki-sources.",
+      "evidence": [
+        "Sources/Portal/Views/Wiki/WikiEventsPageView.swift",
+        "Sources/Portal/Views/Wiki/WikiGraphControlsBar.swift",
+        "Sources/Portal/Views/Wiki/WikiGraphView.swift"
+      ],
+      "source": "wiki-ui",
+      "symbols": [
+        "WikiChangesetSource",
+        "WikiEventLogSource"
+      ],
+      "target": "wiki-sources",
+      "type": "references",
+      "weight": 5
     },
     {
       "authority": "observed",
@@ -4405,10 +4772,10 @@
     }
   ],
   "inventory": {
-    "assigned_files": 303,
-    "declarations": 934,
-    "swift_files": 303,
-    "swift_lines": 88684,
+    "assigned_files": 318,
+    "declarations": 957,
+    "swift_files": 318,
+    "swift_lines": 92355,
     "unassigned_files": []
   },
   "layers": [
@@ -4440,6 +4807,6 @@
   ],
   "repository": "ethenotethan/portal",
   "schema_version": "1.0.0",
-  "source_tree_sha256": "4747fb9dd5ae840d3b76b0ba9c9c08018d734a3ae307a9efcf829af35b22f49d",
+  "source_tree_sha256": "fb58eb3746055d6684593e31ab87aa089638e719eb33c43896004b93228894db",
   "title": "Portal Architecture"
 }

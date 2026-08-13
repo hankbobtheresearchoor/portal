@@ -65,8 +65,8 @@
       "id": "operations-state",
       "label": "Operations state",
       "layer": "orchestration",
-      "description": "Session, cron, activity, feed, skill, settings, and learning state machines.",
-      "patterns": ["ViewModels/Cron*.swift", "ViewModels/Session*.swift", "ViewModels/Activity*.swift", "ViewModels/Feed*.swift", "ViewModels/Skills*.swift", "ViewModels/Settings*.swift", "ViewModels/Quiz/**", "ViewModels/Learning/**", "ViewModels/Celebration*.swift"]
+      "description": "Session, cron, activity, feed, skill, settings, gateway-lifecycle, and learning state machines.",
+      "patterns": ["ViewModels/Cron*.swift", "ViewModels/Session*.swift", "ViewModels/Activity*.swift", "ViewModels/Feed*.swift", "ViewModels/Skills*.swift", "ViewModels/Settings*.swift", "ViewModels/GatewayRestart*.swift", "ViewModels/Quiz/**", "ViewModels/Learning/**", "ViewModels/Celebration*.swift"]
     },
     {
       "id": "wiki-state",
@@ -95,6 +95,20 @@
       "layer": "integration",
       "description": "Centaur REST/SSE chat, workflows, wiki, and event adaptation.",
       "patterns": ["Services/Centaur*.swift", "Models/Centaur*.swift"]
+    },
+    {
+      "id": "artifact-intents",
+      "label": "Artifact intents",
+      "layer": "integration",
+      "description": "Declared-intent contract for living artifacts: inert artifact-authored declarations, the nonce-gated bridge out of untrusted artifact content, revision-pinned dispatch, maintainer references, and the native-only session click-through seam.",
+      "patterns": ["Models/ArtifactActions.swift", "Models/HTMLArtifactIntentBridge.swift", "Models/HTMLPointerLockBridge.swift", "Models/ArtifactIntentSessionLink.swift", "Models/MaintainerRef.swift", "Services/ArtifactStore.swift"]
+    },
+    {
+      "id": "wiki-sources",
+      "label": "Wiki source contract",
+      "layer": "integration",
+      "description": "Capability markers for knowledge backends: which source records an edit history, and which can report the ingestion events behind a page. Wiki surfaces gate their affordances on conformance rather than on backend identity. WikiSource and the Centaur-only timeline rollups are declared with the Centaur client and stay under centaur-services.",
+      "patterns": ["Services/WikiChangesetSource.swift", "Services/WikiEventLogSource.swift"]
     },
     {
       "id": "local-services",
@@ -158,6 +172,9 @@
     {"source": "chat-ui", "target": "chat-state", "type": "observes", "description": "Chat views render and act through conversation state.", "evidence": ["Sources/Portal/Views/ChatView.swift", "Sources/Portal/ViewModels/ChatViewModel.swift"]},
     {"source": "operations-ui", "target": "operations-state", "type": "observes", "description": "Operational surfaces render dedicated observable state.", "evidence": ["Sources/Portal/Views/CronListView.swift", "Sources/Portal/ViewModels/CronListViewModel.swift"]},
     {"source": "wiki-ui", "target": "wiki-state", "type": "observes", "description": "Wiki views use graph and timeline view models.", "evidence": ["Sources/Portal/Views/Wiki/WikiGraphView.swift", "Sources/Portal/ViewModels/WikiGraphViewModel.swift"]},
+    {"source": "wiki-ui", "target": "wiki-sources", "type": "depends_on", "description": "Wiki surfaces test the source for capability conformance to decide what to offer: the changeset drawer requires an edit history, the events plot and feed require an ingestion log. A missing affordance means the backend has nothing to show.", "evidence": ["Sources/Portal/Views/Wiki/WikiGraphView.swift", "Sources/Portal/Views/Wiki/WikiEventsPageView.swift"]},
+    {"source": "wiki-sources", "target": "hermes-services", "type": "implemented_by", "description": "The gateway serves the wiki graph, pages, changeset history and an event log whose entries carry the changesets they caused.", "evidence": ["Sources/Portal/Services/WikiChangesetSource.swift", "Sources/Portal/Services/GatewayClient+Wiki.swift"]},
+    {"source": "wiki-sources", "target": "centaur-services", "type": "implemented_by", "description": "The REST wiki-api serves the event log with directive attribution, plus the bucketed revision volume and baseline the knowledge-accrued pane needs.", "evidence": ["Sources/Portal/Services/WikiEventLogSource.swift", "Sources/Portal/Services/CentaurWikiClient+Timeline.swift"]},
     {"source": "chat-state", "target": "backend-contract", "type": "depends_on", "description": "Conversation orchestration consumes the backend-neutral AgentBackend interface.", "evidence": ["Sources/Portal/Services/AgentBackend.swift", "Sources/Portal/ViewModels/ChatViewModel.swift"]},
     {"source": "backend-contract", "target": "hermes-services", "type": "implemented_by", "description": "GatewayClient implements the AgentBackend protocol for Hermes.", "evidence": ["Sources/Portal/Services/AgentBackend.swift", "Sources/Portal/Services/GatewayClient.swift"]},
     {"source": "backend-contract", "target": "centaur-services", "type": "implemented_by", "description": "Centaur adapts REST/SSE behavior to the backend-neutral conversation surface.", "evidence": ["Sources/Portal/Services/CentaurClient.swift", "Sources/Portal/Services/AgentBackend.swift"]},
@@ -165,11 +182,17 @@
     {"source": "hermes-services", "target": "hermes-standard", "type": "connects_to", "description": "HermesStandardClient uses upstream management APIs.", "evidence": ["Sources/Portal/Services/HermesStandardClient.swift"]},
     {"source": "centaur-services", "target": "centaur-api", "type": "connects_to", "description": "Centaur clients use REST and SSE APIs.", "evidence": ["Sources/Portal/Services/CentaurClient.swift"]},
     {"source": "local-services", "target": "device-services", "type": "connects_to", "description": "Local services integrate with platform persistence, files, media, and notifications.", "evidence": ["Sources/Portal/Services/KeychainStore.swift", "Sources/Portal/Services/NotificationService.swift"]},
-    {"source": "artifact-ui", "target": "domain-models", "type": "renders", "description": "Artifact blocks render typed artifact and message models.", "evidence": ["Sources/Portal/Views/Blocks/ArtifactPanel.swift"]}
+    {"source": "artifact-ui", "target": "domain-models", "type": "renders", "description": "Artifact blocks render typed artifact and message models.", "evidence": ["Sources/Portal/Views/Blocks/ArtifactPanel.swift"]},
+    {"source": "artifact-ui", "target": "artifact-intents", "type": "depends_on", "description": "Artifact surfaces — including the generated 3D world hosted in its own window — render declared actions and dispatch clicks through the intent contract rather than acting on artifact content directly.", "evidence": ["Sources/Portal/Views/ArtifactFullscreenWindow.swift", "Sources/Portal/Models/HTMLArtifactIntentBridge.swift"]},
+    {"source": "artifact-intents", "target": "hermes-services", "type": "depends_on", "description": "An intent click is dispatched as artifact.action.invoke/confirm against the pinned revision; the gateway resolves the registered handler from the binding ID.", "evidence": ["Sources/Portal/Services/ArtifactStore.swift", "Sources/Portal/Services/GatewayClient.swift"]},
+    {"source": "artifact-intents", "target": "operations-state", "type": "depends_on", "description": "Declared maintainer references resolve against cron state, so the product can distinguish an artifact a job actively tends from one that is merely mutable.", "evidence": ["Sources/Portal/Models/MaintainerRef.swift", "Sources/Portal/ViewModels/CronListViewModel.swift"]},
+    {"source": "artifact-intents", "target": "app-shell", "type": "navigates", "description": "When an intent runs as a contained agent session, native code posts the session switch; the untrusted artifact page is never handed a session ID or navigation capability.", "evidence": ["Sources/Portal/Models/ArtifactIntentSessionLink.swift", "Sources/Portal/Views/ContentView.swift"]}
   ],
   "specifications": [
     {"id": "system", "title": "System architecture", "path": "architecture/specifications/system.md"},
     {"id": "boundaries", "title": "Boundaries and authority", "path": "architecture/specifications/boundaries.md"},
+    {"id": "artifact-intents", "title": "Intent-based artifacts", "path": "architecture/specifications/artifact-intents.md"},
+    {"id": "wiki", "title": "The wiki as a knowledge system", "path": "architecture/specifications/wiki.md"},
     {"id": "maintenance", "title": "Continuous maintenance", "path": "architecture/specifications/continuous-maintenance.md"}
   ]
 }

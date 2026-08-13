@@ -98,6 +98,45 @@ struct SessionExporterMarkdownTests {
         #expect(md.contains("### 🔧 tool: WebSearch (incomplete)"))
     }
 
+    @Test("A tool's start time appears as a time-only annotation in its heading")
+    internal func toolStartTimeAnnotation() {
+        // startedAt is optional and rendered as HH:mm:ss in the heading's
+        // parenthetical, alongside duration — the timing context that makes a
+        // transcript's tool sequence legible in a shared export.
+        let tool = ToolCallRecord(
+            id: "t-ts",
+            name: "Bash",
+            context: "echo hi",
+            summary: "hi",
+            durationSeconds: 0.5,
+            isComplete: true,
+            startedAt: fixedDate // 2025-06-15 15:06:40 UTC
+        )
+        let md = export([ChatMessage(role: .assistant, content: "ok", toolCalls: [tool])])
+        // The time-only annotation precedes the duration in the heading.
+        #expect(md.contains("### 🔧 tool: Bash (15:06:40, 0.5s)"))
+    }
+
+    @Test("An inline diff renders as a fenced diff block under the tool")
+    internal func toolInlineDiffSection() {
+        // inlineDiff is optional structured patch text; when present it is
+        // rendered as its own fenced "Diff:" block so the exported transcript
+        // preserves the change a tool made, not just its summary.
+        let tool = ToolCallRecord(
+            id: "t-diff",
+            name: "patch",
+            context: nil,
+            summary: nil,
+            inlineDiff: "@@ -1 +1 @@\n-old\n+new",
+            isComplete: true
+        )
+        let md = export([ChatMessage(role: .assistant, content: "done", toolCalls: [tool])])
+        #expect(md.contains("**Diff:**"))
+        // fenced() wraps in a ```diff block; with no backticks inside, the
+        // fence is the standard three.
+        #expect(md.contains("```diff\n@@ -1 +1 @@\n-old\n+new\n```"))
+    }
+
     @Test("Code fences inside message content are preserved verbatim")
     func codeFencePreservation() {
         let content = """
@@ -156,6 +195,24 @@ struct SessionExporterMarkdownTests {
         let md = export([message])
         #expect(md.contains("**Attachments (referenced, not embedded):** `chart.png`"))
         #expect(md.contains("images and file attachments are referenced by filename, not embedded"))
+    }
+
+    @Test("A user's sent media attachments are referenced by filename in the user section")
+    internal func userAttachmentReferences() {
+        // userAttachments (MediaAttachment) is a distinct field from the
+        // assistant-side attachments (FileAttachment) above, rendered by a
+        // separate branch in userSection. Covering it confirms the user's own
+        // uploads survive the export as filename references, not embedded data.
+        let message = ChatMessage(
+            role: .user,
+            content: "Here are the screenshots",
+            userAttachments: [
+                MediaAttachment(path: "/tmp/screenshot1.png"),
+                MediaAttachment(path: "/tmp/screenshot2.jpg"),
+            ]
+        )
+        let md = export([message])
+        #expect(md.contains("**Attachments (referenced, not embedded):** `screenshot1.png`, `screenshot2.jpg`"))
     }
 
     @Test("Interrupted turn status is noted")

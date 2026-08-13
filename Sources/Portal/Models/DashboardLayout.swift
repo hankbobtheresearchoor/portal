@@ -56,27 +56,68 @@ internal struct DashboardLayout: Codable, Equatable {
         return DashboardLayout(panels: panels.map { $0.clamped(to: bounds) })
     }
 
+    /// Snap a canvas size to whole points. Reflow works entirely in this
+    /// quantized domain — see `reflowed(from:to:)` for why that's load-bearing
+    /// rather than cosmetic.
+    internal static func quantize(_ size: CGSize) -> CGSize {
+        CGSize(width: size.width.rounded(), height: size.height.rounded())
+    }
+
     /// Scale every panel's frame proportionally when the canvas changes size, so
     /// a layout that filled the old bounds still fills the new ones (going
     /// fullscreen grows the panels instead of leaving dead space; shrinking packs
     /// them back). Origins and sizes scale by the per-axis ratio, then clamp.
-    /// No-op when either size is degenerate or unchanged.
+    /// No-op when either size is degenerate, or when neither size changes by a
+    /// whole point.
+    ///
+    /// **This function must be a fixed point**, and that requirement comes from
+    /// its caller, not from taste. `DashboardCanvasView` drives it from
+    /// `onChange(of: geo.size)` on a `GeometryReader` whose own children are the
+    /// panels being resized, so the output is fed back into the input: measure →
+    /// write `layout` → relayout → measure again. If a second pass at the same
+    /// canvas size can produce even a sub-point-different layout, that feedback
+    /// never converges — the view graph re-runs forever, the run loop never
+    /// reaches idle, and the app beachballs at 100% CPU.
+    ///
+    /// The old `guard old != new` looked like it prevented that and didn't. The
+    /// sizes SwiftUI reports across passes differ in their last bits, so exact
+    /// inequality is *always* true: every pass rescaled from a marginally
+    /// different `old`, produced a marginally different layout, wrote `@State`,
+    /// and invited another measurement. Replayed with sizes wobbling at 1e-13,
+    /// the old code performs 160 state writes in 200 passes; this version
+    /// performs none. Same failure mode `ChatLayoutMath` exists to prevent on the
+    /// chat surface, same fix — quantize, then compare.
+    ///
+    /// Quantizing to whole points makes convergence structural rather than
+    /// probabilistic: both sizes snap to integers, the scaled frames round, and
+    /// `clamped(to:)` preserves integrality when its bounds are integral (its
+    /// `min`/`max` only ever select among integral operands). So identical
+    /// quantized bounds always yield a byte-identical layout, the `old == new`
+    /// guard short-circuits the second pass, and the cycle closes after one step.
+    /// A half-point of panel position is invisible; a beachball is not.
     internal func reflowed(from old: CGSize, to new: CGSize) -> DashboardLayout {
-        guard old.width > 0, old.height > 0, new.width > 0, new.height > 0 else {
-            return clamped(to: new)
+        let oldQ = Self.quantize(old)
+        let newQ = Self.quantize(new)
+        guard oldQ.width > 0, oldQ.height > 0, newQ.width > 0, newQ.height > 0 else {
+            return clamped(to: newQ)
         }
-        guard old != new else { return self }
-        let sx = new.width / old.width
-        let sy = new.height / old.height
+        guard oldQ != newQ else { return self }
+        let sx = newQ.width / oldQ.width
+        let sy = newQ.height / oldQ.height
         let scaled = panels.map { panel -> DashboardPanel in
             let f = panel.frame
             let reframed = CGRect(
-                x: f.minX * sx, y: f.minY * sy,
-                width: f.width * sx, height: f.height * sy
+                x: (f.minX * sx).rounded(), y: (f.minY * sy).rounded(),
+                width: (f.width * sx).rounded(), height: (f.height * sy).rounded()
             )
-            return DashboardPanel(id: panel.id, kind: panel.kind, frame: reframed)
+            // Carry `isCollapsed` across: dropping it (the default is `false`)
+            // silently expanded every collapsed panel on any window resize.
+            return DashboardPanel(
+                id: panel.id, kind: panel.kind, frame: reframed,
+                isCollapsed: panel.isCollapsed
+            )
         }
-        return DashboardLayout(panels: scaled).clamped(to: new)
+        return DashboardLayout(panels: scaled).clamped(to: newQ)
     }
 
     // MARK: Persistence

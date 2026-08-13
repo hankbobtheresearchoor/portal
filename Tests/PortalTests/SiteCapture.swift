@@ -14,12 +14,15 @@ import SwiftUI
 /// These assert only that a render succeeded — they are not a visual gate, and
 /// nothing in CI depends on them. The value is the accumulated knowledge of
 /// what `ImageRenderer` can and cannot capture, recorded per test below: any
-/// `NSViewRepresentable` renders as an opaque placeholder box, Highlightr and
-/// markdown tables populate asynchronously and come out empty, a `ScrollView`
-/// with a fixed frame renders blank, an under-tall frame compresses text into
-/// an ellipsis instead of clipping, and hierarchical foreground styles resolve
-/// against black unless an ancestor foreground is supplied. Each of those cost
-/// a debugging round trip; re-deriving them is the expensive part, not the PNGs.
+/// `NSViewRepresentable` renders as an opaque placeholder box, so does
+/// `.buttonStyle(.borderless)` (it resolves to an AppKit-backed style),
+/// Highlightr and markdown tables populate asynchronously and come out empty, a
+/// `ScrollView` renders blank with no workaround, `.task` never runs so
+/// self-loading views capture their spinner, an under-tall frame compresses text
+/// into an ellipsis instead of clipping, and hierarchical foreground styles
+/// resolve against black unless an ancestor foreground is supplied. Swift
+/// `Charts` capture fine. Each of those cost a debugging round trip;
+/// re-deriving them is the expensive part, not the PNGs.
 @Suite("SiteCapture")
 @MainActor
 internal struct SiteCapture {
@@ -414,6 +417,232 @@ internal struct SiteCapture {
         .padding(24)
 
         try write(inbox, "activity", CGSize(width: 820, height: 288))
+    }
+
+    /// The wiki: the ingestion event plot beside the event feed, and the
+    /// knowledge-accrued pane that reads input events against page edits.
+    ///
+    /// Neither force graph can be captured here, for the same reason the
+    /// expanded `ThoughtGraphView` can't: `WikiGraph2DCanvas` overlays a
+    /// `GraphMouseInterceptor` — an `NSViewRepresentable` for pan, drag and
+    /// hit-testing — across the whole surface, and `ImageRenderer` paints any
+    /// representable as an opaque placeholder over everything beneath it.
+    /// `WikiGraph3DView` is SceneKit, which is the same problem.
+    ///
+    /// Three further constraints shape what's assembled below, each verified
+    /// with a probe rather than assumed:
+    ///
+    /// - A `ScrollView` renders blank — `.scrollDisabled(true)`, `.fixedSize()`,
+    ///   an inner explicit frame and `.defaultScrollAnchor(.top)` all fail
+    ///   identically, so there is no workaround, only a different seam. That
+    ///   rules out `WikiEventsPageView`, `WikiReaderPane`, `WikiFileTreeSidebar`
+    ///   and `WikiPageReaderBody` as whole views (the reader wraps its loaded
+    ///   content in one, which is why the page reader isn't a figure on the
+    ///   site). Their scroll-free inner surfaces do render: `WikiEventFeedList`
+    ///   is the row list both feed hosts embed, and the knowledge pane's tiles
+    ///   and charts are the same views `WikiEventsKnowledgePane` composes.
+    /// - `.buttonStyle(.borderless)` renders as the same yellow placeholder as a
+    ///   representable — it resolves to an AppKit-backed style. So the fixtures
+    ///   omit the fields whose affordances are borderless buttons (an event's
+    ///   source URL, its changeset chips, a directive's target-page chips), and
+    ///   the knowledge pane is assembled from its parts rather than used whole,
+    ///   because it carries a segmented `Picker` and a pages-touched list of
+    ///   borderless rows. Every one of those is real and optional on the wire;
+    ///   leaving them out shows fewer affordances than the app has, never a
+    ///   fake one.
+    /// - `.task` never runs under `ImageRenderer`, so any view that loads its
+    ///   own content captures its spinner unless the state is pre-seeded.
+    @Test("wiki events and knowledge accrued")
+    internal func wiki() throws {
+        // Relative to now, like the cron and activity fixtures: the plot's
+        // domain and the feed's "1h ago" are both read against the live clock.
+        func ago(_ seconds: Double) -> Date { Date(timeIntervalSinceNow: -seconds) }
+
+        // A ten-day window, with per-day ingestion volume and per-day page-edit
+        // volume derived from ONE shape. The knowledge pane's whole claim is that
+        // input events and output edits are readable against each other on a
+        // shared x, so a fixture with flat input and spiky output would picture
+        // the view while contradicting its point.
+        let calendar = Calendar.current
+        let windowSeconds = 10 * 86_400.0
+        let dailyEdits = [14, 9, 31, 22, 6, 47, 38, 12, 26, 19]
+        let today: Date = calendar.startOfDay(for: Date())
+        let elapsedToday = Date().timeIntervalSince(today)
+
+        // Kinds cycle through a weighted pattern rather than round-robin: a
+        // real vault's sources are lopsided (PRs dominate, a stats job posts
+        // once a day), and five lanes with an identical count in the legend
+        // reads as generated data, which is exactly what it would be.
+        let kinds = [
+            "github_pr", "linear", "github_pr", "drive", "github_pr",
+            "directive", "github_pr", "linear", "openrouter_stats", "github_pr",
+            "directive", "linear", "github_pr", "drive",
+        ]
+        var plotted: [WikiTimelineEvent] = []
+        for day in 0..<10 {
+            let dayStart: Date = calendar.startOfDay(for: ago(Double(9 - day) * 86_400))
+            // Roughly one event per two edits, floored so a quiet day still
+            // shows a lane or two rather than a gap the plot can't explain.
+            let count = max(2, dailyEdits[day] / 2)
+            // Only the elapsed part of today can hold events.
+            let span = day == 9 ? elapsedToday : 86_400
+            for slot in 0..<count {
+                let i = plotted.count
+                let when: Date = dayStart.addingTimeInterval(
+                    span * (Double(slot) + 0.5) / Double(count)
+                )
+                plotted.append(WikiTimelineEvent(
+                    sourceKey: "e\(i)", kindRaw: kinds[i % kinds.count],
+                    label: "event \(i)", url: "",
+                    occurredAt: when, ingestedAt: when,
+                    // A source that only recorded ingest time plots as a hollow
+                    // diamond; a real log has a few. Off the index, not an RNG —
+                    // `SiteCapture` renders have to be reproducible.
+                    eventTimeEstimated: i.isMultiple(of: 11),
+                    actorSlackID: nil, actorName: nil, directiveBody: nil,
+                    directiveExcerpt: nil, targetPages: nil, directiveStatus: nil,
+                    resultingRevisionIDs: nil
+                ))
+            }
+        }
+        // Legend counts read off the same events the plot draws, the way
+        // `events_by_kind` does on the wire.
+        let eventsByKind = Dictionary(grouping: plotted, by: \.kindRaw).mapValues(\.count)
+
+        let feedRows = [
+            WikiTimelineEvent(
+                sourceKey: "raw/github/pr-2211.md", kindRaw: "github_pr",
+                label: "researchoors/hermes-agent#2211 — pin the draft model revision per request",
+                url: "", occurredAt: ago(6_900), ingestedAt: ago(6_600),
+                eventTimeEstimated: false,
+                actorSlackID: nil, actorName: nil, directiveBody: nil,
+                directiveExcerpt: nil, targetPages: nil, directiveStatus: nil,
+                resultingRevisionIDs: nil,
+                // Shown on the selected row: the leading bytes are what you
+                // compare by eye to tell a re-ingest from a new version.
+                sha256: "9f2ac41b77e0d3c85a1e"
+            ),
+            WikiTimelineEvent(
+                sourceKey: "raw/slack/directive-4471.md", kindRaw: "directive",
+                label: "keep the acceptance numbers on the concept page", url: "",
+                occurredAt: ago(19_400), ingestedAt: ago(19_100),
+                eventTimeEstimated: false,
+                actorSlackID: "U04KQ", actorName: "Ethen", directiveBody: nil,
+                directiveExcerpt: "keep the acceptance-rate numbers on the concept page, not the comparison",
+                targetPages: nil, directiveStatus: "applied",
+                resultingRevisionIDs: [4_471]
+            ),
+            WikiTimelineEvent(
+                sourceKey: "raw/openrouter/2026-08-12.md", kindRaw: "openrouter_stats",
+                label: "Daily token spend rollup — 41.2M tokens across 9 models",
+                url: "", occurredAt: nil, ingestedAt: ago(48_000),
+                eventTimeEstimated: true,
+                actorSlackID: nil, actorName: nil, directiveBody: nil,
+                directiveExcerpt: nil, targetPages: nil, directiveStatus: nil,
+                resultingRevisionIDs: nil
+            ),
+        ]
+
+        // The macOS split: plot and legend left, feed right, one selection
+        // across both — the dot for `e6` is enlarged and the matching feed row
+        // is the expanded one. Assembled here because the page itself is a
+        // ScrollView; the panes are the shipping views.
+        let eventsPage = HStack(alignment: .top, spacing: 20) {
+            VStack(alignment: .leading, spacing: 10) {
+                WikiEventKindLegend(eventsByKind: eventsByKind)
+                WikiEventDotChart(
+                    events: plotted,
+                    window: ago(windowSeconds)...Date(),
+                    selectedEventID: .constant("e6")
+                )
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Event Feed")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.primary)
+                WikiEventFeedList(
+                    events: feedRows,
+                    selectedEventID: .constant("raw/github/pr-2211.md")
+                )
+            }
+            .frame(width: 350)
+        }
+        .padding(22)
+
+        try write(eventsPage, "wikievents", CGSize(width: 1040, height: 300))
+
+        // The output side: page-edit volume per day, the same series the input
+        // events above were scaled from.
+        var buckets: [WikiRevisionsTimeline.Bucket] = []
+        for day in 0..<10 {
+            let start: Date = calendar.startOfDay(for: ago(Double(9 - day) * 86_400))
+            buckets.append(WikiRevisionsTimeline.Bucket(bucket: start, count: dailyEdits[day]))
+        }
+        let totalInWindow = dailyEdits.reduce(0, +)
+        // The window ends at the END of today, not `now`: a day-unit `BarMark`
+        // spans its whole bucket, so a domain stopping mid-day clips the newest
+        // bar in half against the plot edge.
+        let windowEnd: Date = today.addingTimeInterval(86_400)
+        let revisions = WikiRevisionsTimeline(
+            unit: "day",
+            since: ago(windowSeconds), until: windowEnd,
+            // Pre-window total. Kept the same order of magnitude as the window's
+            // own edits — a baseline ten times the window flattens the accrued
+            // curve into a straight line, which is true to the view but says
+            // nothing about it.
+            baseline: 612,
+            totalInWindow: totalInWindow,
+            buckets: buckets
+        )
+        let window: ClosedRange<Date> = ago(windowSeconds)...windowEnd
+
+        // The knowledge-accrued pane, assembled from the views
+        // `WikiEventsKnowledgePane` composes: it can't be captured whole because
+        // it carries a segmented Picker and a list of borderless rows. The tiles
+        // read off the same timeline the charts plot, the way the pane's own
+        // `statTiles` does, so no figure value can disagree with the plot beside
+        // it. Only "Pages touched" is a literal — it comes from a separate
+        // `/wiki/changes` response.
+        func compact(_ value: Int) -> String { value.formatted(.number.notation(.compactName)) }
+        let accrued = VStack(alignment: .leading, spacing: 14) {
+            WikiEventsSectionLabel(
+                "Knowledge accrued",
+                detail: "\(revisions.totalInWindow) page edits in window · \(revisions.baseline) before"
+            )
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 130, maximum: 220), spacing: 8, alignment: .topLeading)],
+                alignment: .leading,
+                spacing: 8
+            ) {
+                WikiEventsStatTile(
+                    label: "Total revisions",
+                    value: compact(revisions.totalAllTime),
+                    detail: "all time"
+                )
+                WikiEventsStatTile(
+                    label: "This window",
+                    value: compact(revisions.totalInWindow),
+                    detail: "\(plotted.count) input events"
+                )
+                WikiEventsStatTile(
+                    label: "Busiest day",
+                    value: (revisions.busiestBucket?.count).map(compact) ?? "—",
+                    detail: revisions.busiestBucket?.bucket?
+                        .formatted(date: .abbreviated, time: .omitted) ?? "no edits"
+                )
+                WikiEventsStatTile(
+                    label: "Pages touched",
+                    value: "63",
+                    detail: "38 concept · 17 entity · 8 topic"
+                )
+            }
+            WikiRevisionsChart(timeline: revisions, window: window, showCumulative: true)
+            Divider().overlay(Theme.border)
+            WikiEventsInputOutputChart(events: plotted, revisions: revisions, window: window)
+        }
+        .padding(22)
+
+        try write(accrued, "wikiaccrued", CGSize(width: 900, height: 636))
     }
 
     @Test("learning dashboard")

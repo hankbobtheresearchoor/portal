@@ -85,5 +85,111 @@ internal struct MainThreadWatchdogTests {
     internal func emptyWindow() {
         #expect(busy([]) == 0)
     }
+
+    @Test("A few heavy sub-threshold turns read as a storm")
+    internal func fewHeavyTurnsAreAStorm() {
+        // The gap the old stormMinTurns = 20 left open: 8 turns of 120ms = 960ms
+        // busy in a 1s window. The CPU is pegged, but the hang detector sees no
+        // turn past 250ms and a 20-turn floor would have rejected it as a flurry.
+        // Both tripwires silent, beachball on screen.
+        var intervals: [(start: CFAbsoluteTime, end: CFAbsoluteTime)] = []
+        var t = windowStart
+        for _ in 0..<8 {
+            intervals.append((start: t, end: t + 0.120))
+            t += 0.125
+        }
+        let fraction = busy(intervals) / 1.0
+        #expect(fraction >= 0.8)
+        #expect(intervals.count >= 2)   // clears the floor that now applies
+        #expect(intervals.allSatisfy { $0.end - $0.start < 0.250 })  // no hang fires
+    }
+
+    @Test("Busy marked before the frameworks run, idle after them")
+    internal func observerOrderBracketsFrameworkWork() {
+        // The bug that made this whole detector silent during a live beachball:
+        // SwiftUI runs the view-graph update inside a `beforeWaiting` observer,
+        // so marking idle at the same order (0) as SwiftUI's observer put the
+        // expensive work outside the busy span. Busy must be marked first among
+        // afterWaiting observers and idle LAST among beforeWaiting ones.
+        #expect(MainThreadWatchdog.busyObserverOrder < MainThreadWatchdog.idleObserverOrder)
+        // CoreAnimation's commit observer sits at 2_000_000 and SwiftUI's at 0 —
+        // the idle mark has to come after any of them to contain their work.
+        #expect(MainThreadWatchdog.idleObserverOrder > 2_000_000)
+        #expect(MainThreadWatchdog.busyObserverOrder < 0)
+    }
+
+    // MARK: - Report decision + latch
+    //
+    // The live storm path only fires from a genuinely saturated run loop, and it
+    // can't be driven end-to-end: main-queue blocks don't execute during a launch
+    // with no window, so a synthetic-spin probe never runs. That's exactly the
+    // conditions under which the original observer-ordering bug went unnoticed for
+    // this detector's whole life, so the decision is pinned here instead.
+
+    private func decide(
+        fraction: Double, turns: Int, reported: Bool, saturatedFor: TimeInterval = 5
+    ) -> (report: Bool, clearLatch: Bool) {
+        MainThreadWatchdog.stormDecision(
+            busyFraction: fraction, turns: turns, threshold: 0.8, minTurns: 2,
+            saturatedFor: saturatedFor, sustainSeconds: 3,
+            alreadyReported: reported
+        )
+    }
+
+    @Test("A high-refresh animation is not a storm")
+    internal func animationIsNotAStorm() {
+        // Measured on a real launch once framework work landed inside the busy
+        // span: "81% busy across 151 short turns", stack deep in
+        // CA::Context::commit_transaction — a healthy app animating at display
+        // refresh rate. Duration is what separates it from a stuck loop, and the
+        // CI gate runs --hang-fatal, so reporting this would crash the build.
+        #expect(!decide(fraction: 0.81, turns: 151, reported: false, saturatedFor: 0.2).report)
+        #expect(!decide(fraction: 0.95, turns: 120, reported: false, saturatedFor: 2.9).report)
+        // Past the sustain window it is no longer explicable as an animation.
+        #expect(decide(fraction: 0.81, turns: 151, reported: false, saturatedFor: 3.0).report)
+    }
+
+    @Test("A saturated window reports once, not on every poll")
+    internal func stormReportsOnce() {
+        #expect(decide(fraction: 0.95, turns: 12, reported: false).report)
+        // Same storm, next poll 50ms later — must stay quiet or the log floods.
+        #expect(!decide(fraction: 0.95, turns: 12, reported: true).report)
+    }
+
+    @Test("The latch rearms only after the storm actually subsides")
+    internal func stormLatchIsEdgeTriggered() {
+        #expect(decide(fraction: 0.2, turns: 5, reported: true).clearLatch)
+        // Still saturated → do NOT rearm, or the same ongoing storm re-reports.
+        #expect(!decide(fraction: 0.9, turns: 12, reported: true).clearLatch)
+        // A settled window with the latch already clear has nothing to clear.
+        #expect(!decide(fraction: 0.1, turns: 3, reported: false).clearLatch)
+        // Rearmed: a storm that recurs after settling reports again.
+        #expect(decide(fraction: 0.95, turns: 12, reported: false).report)
+    }
+
+    @Test("A single-turn window is left to the hang detector")
+    internal func singleTurnNotAStorm() {
+        // One turn saturating the window is a hang, not a churn loop — and
+        // checkForStorm only runs when no hang is in progress, so reporting it
+        // here would double-report the same stall under the wrong framing.
+        #expect(!decide(fraction: 1.0, turns: 1, reported: false).report)
+        #expect(decide(fraction: 1.0, turns: 2, reported: false).report)
+    }
+
+    @Test("A spin that never sleeps still accumulates busy time")
+    internal func nonSleepingSpinAccumulates() {
+        // When a turn enqueues more work, CFRunLoop skips the sleep and returns
+        // straight to beforeWaiting — consecutive idle marks with no afterWaiting
+        // between them, which is precisely the relayout loop this hunts. markIdle
+        // infers each span from the previous idle mark; that inference is modeled
+        // here as back-to-back intervals covering the window with no gaps.
+        var intervals: [(start: CFAbsoluteTime, end: CFAbsoluteTime)] = []
+        var t = windowStart
+        for _ in 0..<10 {
+            intervals.append((start: t, end: t + 0.100))
+            t += 0.100   // no idle gap at all — the loop never waits
+        }
+        #expect(abs(busy(intervals) / 1.0 - 1.0) < 1e-9)
+    }
 }
 #endif

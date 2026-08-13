@@ -261,6 +261,18 @@ h1 { margin: 0; font-size: 17px; line-height: 1.1; letter-spacing: -.01em; }
   padding-top: clamp(28px, 4vw, 44px);
   border-top: 1px solid var(--line);
 }
+/* A figure too wide to survive a half-column, sitting between two feature rows
+   rather than after the last one like `.proof-grid`. It therefore needs padding
+   on BOTH sides: without the bottom, the next row's `border-top` lands hard
+   against the figcaption instead of reading as a section divider. */
+.wide-shot {
+  padding: clamp(28px, 4vw, 44px) 0;
+  border-top: 1px solid var(--line);
+}
+/* Capped near its 1x capture size and centered: stretched to a wide viewport
+   this figure's three stacked plots grow taller than the fold, which is worse
+   than a little empty gutter. */
+.wide-shot .shot { max-width: 900px; margin-inline: auto; }
 .shot figcaption {
   margin-top: 12px;
   color: var(--faint);

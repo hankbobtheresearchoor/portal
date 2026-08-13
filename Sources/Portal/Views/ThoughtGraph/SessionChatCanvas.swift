@@ -215,11 +215,16 @@ internal struct SessionChatCanvas: View {
                     content: { panel in panelContent(panel) }
                 )
                 .onAppear {
-                    canvasBounds = geo.size
+                    canvasBounds = DashboardLayout.quantize(geo.size)
                     loadLayoutIfNeeded(bounds: geo.size)
                 }
                 .onChange(of: geo.size) { _, newSize in
-                    canvasBounds = newSize
+                    // Quantized: this is a @State write from inside the reader
+                    // that measures it, so sub-point churn would re-enter here
+                    // forever. `canvasBounds` only feeds seeding and clamping,
+                    // both of which round anyway — nothing needs the fraction.
+                    let quantized = DashboardLayout.quantize(newSize)
+                    if quantized != canvasBounds { canvasBounds = quantized }
                     loadLayoutIfNeeded(bounds: newSize)
                 }
                 // Scroll and Turns are separate canvases: swap the whole board

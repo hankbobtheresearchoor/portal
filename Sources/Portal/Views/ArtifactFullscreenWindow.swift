@@ -2,6 +2,7 @@
 import SwiftUI
 import WebKit
 import AppKit
+import Combine
 import os
 
 private let log = Logger(subsystem: "com.ethenotethan.Portal", category: "ArtifactFullscreen")
@@ -109,6 +110,41 @@ internal enum InteractiveArtifactWeb {
     /// `defaults write com.ethenotethan.Portal HermesPointerLockTrace -bool YES`.
     internal static var showsPointerLockTrace: Bool {
         UserDefaults.standard.bool(forKey: "HermesPointerLockTrace")
+    }
+}
+
+// MARK: - Immersive intents
+
+/// Trusted-side context for dispatching `data-hermes-binding` clicks made
+/// inside the immersive window — the pinned artifact and its declared actions,
+/// exactly what `ArtifactHTMLIntentView` holds for the docked renderer.
+///
+/// Built at the SwiftUI call site (which has the capabilities store in its
+/// environment) rather than inside the controller, so the AppKit window never
+/// reaches into a SwiftUI environment. A nil context renders the world with
+/// dead bindings — the pre-wiring behavior — which is also correct for
+/// history revisions and gateways without the action surface.
+internal struct ArtifactFullscreenIntentContext {
+    internal let artifactID: String
+    internal let actions: [ArtifactAction]
+
+    /// The one decision of whether an immersive presentation dispatches
+    /// intents, kept pure so it can be tested without a window:
+    /// only the live `html` document (a `model3d` spec has no authoring
+    /// surface to place a binding on), only when the gateway supports
+    /// `artifact.action.invoke`, and only when at least one intent is
+    /// actually declared — a context with nothing to resolve would inject
+    /// the bridge for no reason.
+    internal static func make(
+        kind: String,
+        supportsArtifactActions: Bool,
+        artifactID: String,
+        actions: [ArtifactAction]
+    ) -> ArtifactFullscreenIntentContext? {
+        guard kind == "html",
+              supportsArtifactActions,
+              actions.contains(where: { $0.kind == .intent }) else { return nil }
+        return ArtifactFullscreenIntentContext(artifactID: artifactID, actions: actions)
     }
 }
 
@@ -224,6 +260,23 @@ internal final class ArtifactFullscreenWindowController: NSObject, NSWindowDeleg
     private var escapeMonitor: Any?
     private var hintTimer: Timer?
     private let pointerLock = ArtifactPointerLockDelegate()
+    /// Owns the intent nonce and nav-delegate plumbing when this presentation
+    /// dispatches intents. `WKWebView.navigationDelegate` is weak, so the
+    /// controller must hold the strong reference (same reason the inline
+    /// renderer's coordinator owns it).
+    private var intentDelegate: HTMLNavigationDelegate?
+    private var intentContext: ArtifactFullscreenIntentContext?
+    /// The slot of the most recent click, driving the status strip. Marks for
+    /// EVERY slot still reflect into the page DOM — this only picks which one
+    /// the native chrome narrates.
+    private var activeIntentSlot: (bindingID: String, entityRef: String)?
+    private var intentStateSubscription: AnyCancellable?
+    private var statusStrip: NSView?
+    private var statusStripTimer: Timer?
+    /// What the strip currently narrates. The store publishes on EVERY slot
+    /// change across all artifacts; without this diff the strip (and its fade
+    /// timer) would be rebuilt each time any unrelated slot moved.
+    private var statusStripState: ArtifactStore.IntentInvocationState?
     /// Set when Escape / an explicit close arrives while still fullscreen: the
     /// window is torn down only after the fullscreen transition finishes, or the
     /// screen is left with an empty green space.
@@ -245,12 +298,41 @@ internal final class ArtifactFullscreenWindowController: NSObject, NSWindowDeleg
     /// A pre-contract drag-to-look world additionally gets the shim that turns
     /// captured motion into the synthetic drag it expects, derived from `html`
     /// here rather than passed in so the two can never disagree.
-    internal func present(html: String, title: String, autoCapturesPointer: Bool = true) {
+    ///
+    /// `intents` makes the world's inert `data-hermes-binding` controls live:
+    /// the same isolated-world bridge, nonce gate, and store dispatch the
+    /// docked renderer uses, so entering the immersive window no longer trades
+    /// interactivity for immersion. nil (the default) presents a picture-only
+    /// world — history revisions, model3d, gateways without the surface.
+    internal func present(
+        html: String,
+        title: String,
+        autoCapturesPointer: Bool = true,
+        intents: ArtifactFullscreenIntentContext? = nil
+    ) {
         let dragLookShim = InteractiveArtifactWeb.pageDragsToLook(html)
         close()
         pointerLock.reset()
+        intentContext = intents
 
         let config = InteractiveArtifactWeb.baseConfiguration()
+        if let intents {
+            // Same coordinator class the inline renderer uses: it mints the
+            // per-webview nonce, cancels the private-scheme navigation, and
+            // re-stamps status marks after any DOM rebuild. The page still
+            // gets no message handler, gateway object, or fetchable surface.
+            let delegate = HTMLNavigationDelegate(onArtifactIntent: { [weak self] request in
+                self?.handleIntentRequest(request)
+            })
+            intentDelegate = delegate
+            config.userContentController.addUserScript(WKUserScript(
+                source: HTMLArtifactIntentBridge.userScriptSource(nonce: delegate.nonce),
+                injectionTime: .atDocumentEnd,
+                forMainFrameOnly: true,
+                in: WKContentWorld.world(name: HTMLArtifactIntentBridge.contentWorldName)
+            ))
+            observeIntentStates(artifactID: intents.artifactID)
+        }
         if autoCapturesPointer {
             // The trusted-gesture pointer-lock helper: a real click on a <canvas>
             // requests the lock from that same event. See HTMLPointerLockBridge.
@@ -282,6 +364,10 @@ internal final class ArtifactFullscreenWindowController: NSObject, NSWindowDeleg
         webView.capturesInput = true
         // Without a uiDelegate WebKit denies every requestPointerLock() call.
         webView.uiDelegate = pointerLock
+        // Cancels hermes-artifact-action:// navigations and converts them into
+        // intent requests. Absent an intent context this stays nil and the
+        // private scheme simply dead-ends, as before.
+        webView.navigationDelegate = intentDelegate
         webView.setValue(false, forKey: "drawsBackground")
         webView.allowsBackForwardNavigationGestures = false
         webView.translatesAutoresizingMaskIntoConstraints = true
@@ -333,6 +419,236 @@ internal final class ArtifactFullscreenWindowController: NSObject, NSWindowDeleg
         window.makeFirstResponder(webView)
         enterFullScreen(window)
         log.debug("presented artifact fullscreen: \(title, privacy: .public)")
+    }
+
+    // MARK: - Intent dispatch (immersive)
+
+    /// A bridge click arrived from the isolated world. Same gate order as the
+    /// docked renderer's `handleRequest`: resolve against the declared actions
+    /// (defense in depth — the gateway re-resolves against the pinned
+    /// revision), refuse re-entry while this slot is already in flight, then
+    /// dispatch through the shared store so idempotency keys, the ledger, and
+    /// the docked view's badges all stay coherent with what happened here.
+    private func handleIntentRequest(_ request: HTMLArtifactIntentRequest) {
+        guard let intents = intentContext,
+              HTMLArtifactIntentBridge.resolve(request, actions: intents.actions) != nil else { return }
+        let store = ArtifactStore.shared
+        let slot = store.intentSlotKey(
+            artifactID: intents.artifactID,
+            bindingID: request.bindingID,
+            entryKey: request.entityRef
+        )
+        switch store.intentStates[slot] {
+        case .pending, .needsConfirmation: return
+        default: break
+        }
+        activeIntentSlot = (request.bindingID, request.entityRef)
+        Task { [weak self] in
+            await store.invokeIntent(
+                artifactID: intents.artifactID,
+                bindingID: request.bindingID,
+                entryKey: request.entityRef
+            )
+            guard let self, self.intentContext?.artifactID == intents.artifactID else { return }
+            if case .needsConfirmation(let challenge, let prompt) = store.intentStates[slot] {
+                self.presentConfirmation(
+                    for: request, action: HTMLArtifactIntentBridge.resolve(request, actions: intents.actions),
+                    challenge: challenge, prompt: prompt
+                )
+            }
+        }
+    }
+
+    /// Mirror every one of this artifact's intent slots into the page
+    /// (`data-hermes-status`, via the isolated world) and narrate the active
+    /// slot in the native strip. Combine-driven for the window's lifetime —
+    /// the fullscreen window has no SwiftUI update cycle to diff marks in.
+    private func observeIntentStates(artifactID: String) {
+        intentStateSubscription = ArtifactStore.shared.$intentStates
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.reflectIntentStates(artifactID: artifactID)
+            }
+    }
+
+    private func reflectIntentStates(artifactID: String) {
+        guard intentContext?.artifactID == artifactID,
+              let webView, let intentDelegate else { return }
+        let store = ArtifactStore.shared
+        let marks = store.intentSlots(artifactID: artifactID).map { slot in
+            HTMLArtifactIntentBridge.StatusMark(
+                bindingID: slot.bindingID,
+                entityRef: slot.entryKey,
+                status: HTMLArtifactIntentBridge.StatusToken(slot.state)
+            )
+        }
+        intentDelegate.applyStatusMarks(marks, to: webView)
+
+        guard let active = activeIntentSlot else { return }
+        let key = store.intentSlotKey(
+            artifactID: artifactID, bindingID: active.bindingID, entryKey: active.entityRef)
+        if let state = store.intentStates[key] {
+            showStatusStrip(for: state)
+        }
+    }
+
+    /// The gateway demanded confirmation. The dialog is native chrome (the
+    /// prompt is gateway-resolved, never page-authored), and it needs a
+    /// visible cursor — ask the page to release Pointer Lock first, and let
+    /// the world's own first-click capture re-take it afterwards.
+    private func presentConfirmation(
+        for request: HTMLArtifactIntentRequest,
+        action: ArtifactAction?,
+        challenge: String,
+        prompt: String
+    ) {
+        guard let window, let intents = intentContext else { return }
+        releasePointerLockForChrome()
+
+        let alert = NSAlert()
+        alert.messageText = action?.label ?? "Confirm action"
+        alert.informativeText = prompt
+        alert.alertStyle = action?.presentationRole == .destructive ? .critical : .informational
+        alert.addButton(withTitle: action?.presentationRole == .destructive ? "Confirm" : (action?.label ?? "Confirm"))
+        alert.addButton(withTitle: "Cancel")
+        alert.beginSheetModal(for: window) { [weak self] response in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                guard response == .alertFirstButtonReturn else {
+                    ArtifactStore.shared.clearIntentState(
+                        artifactID: intents.artifactID,
+                        bindingID: request.bindingID,
+                        entryKey: request.entityRef
+                    )
+                    self.activeIntentSlot = nil
+                    self.hideStatusStrip()
+                    return
+                }
+                Task {
+                    await ArtifactStore.shared.confirmIntent(
+                        artifactID: intents.artifactID,
+                        bindingID: request.bindingID,
+                        entryKey: request.entityRef,
+                        challenge: challenge
+                    )
+                }
+            }
+        }
+    }
+
+    /// `document.exitPointerLock()` needs no user gesture and the isolated
+    /// world shares the DOM, so native chrome can always free the cursor
+    /// before presenting a dialog over the scene.
+    private func releasePointerLockForChrome() {
+        guard pointerLock.isPointerLocked, let webView else { return }
+        webView.evaluateJavaScript(
+            "document.exitPointerLock && document.exitPointerLock();",
+            in: nil,
+            in: WKContentWorld.world(name: HTMLPointerLockBridge.contentWorldName)
+        ) { _ in }
+    }
+
+    // MARK: - Intent status strip
+
+    /// Trusted narration of the active slot, styled like the capture hint:
+    /// a HUD strip at the top so it never sits over the crosshair. Terminal
+    /// states fade after a few seconds; a returned session ID becomes a
+    /// click-through button that leaves the immersive window and switches to
+    /// the live run.
+    private func showStatusStrip(for state: ArtifactStore.IntentInvocationState) {
+        guard let container = window?.contentView else { return }
+        guard state != statusStripState else { return }
+        hideStatusStrip()
+        statusStripState = state
+
+        let text: String
+        var sessionID: String?
+        var autoFades = true
+        switch state {
+        case .pending:
+            text = "Running intent…"
+            autoFades = false
+        case .needsConfirmation:
+            text = "Waiting for confirmation"
+            autoFades = false
+        case .succeeded(let message, let session):
+            text = message ?? (session != nil ? "Started run" : "Intent succeeded")
+            sessionID = session
+        case .failed(let reason):
+            text = reason
+        case .conflict:
+            text = "Artifact changed. Refreshed — try again."
+        case .unsupported:
+            text = "This intent is not available on the connected harness."
+        }
+
+        let label = NSTextField(labelWithString: text)
+        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.textColor = .white
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        let stack = NSStackView(views: [label])
+        stack.orientation = .horizontal
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        if let sessionID {
+            let button = NSButton(title: "Open session ↗", target: self, action: #selector(openIntentSession(_:)))
+            button.bezelStyle = .inline
+            button.controlSize = .small
+            // The ID rides on the trusted control, never through the page.
+            button.identifier = NSUserInterfaceItemIdentifier(sessionID)
+            stack.addArrangedSubview(button)
+        }
+
+        let backdrop = NSVisualEffectView()
+        backdrop.material = .hudWindow
+        backdrop.blendingMode = .withinWindow
+        backdrop.state = .active
+        backdrop.wantsLayer = true
+        backdrop.layer?.cornerRadius = 10
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        backdrop.addSubview(stack)
+        container.addSubview(backdrop)
+        statusStrip = backdrop
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: backdrop.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: backdrop.trailingAnchor, constant: -16),
+            stack.topAnchor.constraint(equalTo: backdrop.topAnchor, constant: 10),
+            stack.bottomAnchor.constraint(equalTo: backdrop.bottomAnchor, constant: -10),
+            backdrop.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            backdrop.topAnchor.constraint(equalTo: container.topAnchor, constant: 40),
+            backdrop.widthAnchor.constraint(lessThanOrEqualTo: container.widthAnchor, multiplier: 0.8)
+        ])
+
+        if autoFades {
+            statusStripTimer = Timer.scheduledTimer(withTimeInterval: 6, repeats: false) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    self?.hideStatusStrip()
+                    self?.activeIntentSlot = nil
+                }
+            }
+        }
+    }
+
+    private func hideStatusStrip() {
+        statusStripTimer?.invalidate()
+        statusStripTimer = nil
+        statusStrip?.removeFromSuperview()
+        statusStrip = nil
+        statusStripState = nil
+    }
+
+    /// Click-through into the contained agent session an intent started.
+    /// Leaves the immersive window first — the session UI lives in the main
+    /// window, and a fullscreen scene on top of it would swallow the switch.
+    @objc private func openIntentSession(_ sender: NSButton) {
+        let sessionID = sender.identifier?.rawValue ?? ""
+        requestClose()
+        ArtifactIntentSessionLink.open(sessionID: sessionID)
     }
 
     /// AppKit refuses `toggleFullScreen` when it lands in the same turn of the
@@ -458,16 +774,29 @@ internal final class ArtifactFullscreenWindowController: NSObject, NSWindowDeleg
         hintView = nil
         pointerLock.onLockChange = nil
         pointerLock.reset()
+        teardownIntentPlumbing()
         closeAfterExitingFullScreen = false
         guard let window else { return }
         // Blank the page first so any WebGL/rAF loop halts before teardown.
         webView?.loadHTMLString("", baseURL: nil)
         webView?.stopLoading()
         webView?.uiDelegate = nil
+        webView?.navigationDelegate = nil
         window.delegate = nil
         window.orderOut(nil)
         self.window = nil
         self.webView = nil
+    }
+
+    /// Intent state is per-presentation: a stale subscription would reflect a
+    /// closed window's marks, and a stale context could route the NEXT
+    /// artifact's clicks at the previous artifact's actions.
+    private func teardownIntentPlumbing() {
+        intentStateSubscription = nil
+        intentDelegate = nil
+        intentContext = nil
+        activeIntentSlot = nil
+        hideStatusStrip()
     }
 
     private func focusWebView() {
@@ -505,9 +834,11 @@ internal final class ArtifactFullscreenWindowController: NSObject, NSWindowDeleg
             hintView = nil
             pointerLock.onLockChange = nil
             pointerLock.reset()
+            teardownIntentPlumbing()
             webView?.loadHTMLString("", baseURL: nil)
             webView?.stopLoading()
             webView?.uiDelegate = nil
+            webView?.navigationDelegate = nil
             window?.delegate = nil
             window = nil
             webView = nil

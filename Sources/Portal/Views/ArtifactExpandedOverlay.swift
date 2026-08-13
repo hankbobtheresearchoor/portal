@@ -259,13 +259,22 @@ internal struct ArtifactExpandedOverlay: View {
 
     private func enterImmersiveFullscreen() {
         #if os(macOS)
-        let content = store.artifacts[artifact.id]?.content ?? artifact.content
+        let live = store.artifacts[artifact.id] ?? artifact
+        let content = live.content
         guard let html = InteractiveArtifactWeb.immersiveHTML(kind: artifact.kind, content: content) else { return }
         ArtifactFullscreenWindowController.shared.present(
             html: html,
             title: artifact.displayName,
             autoCapturesPointer: InteractiveArtifactWeb.autoCapturesPointer(
-                kind: artifact.kind, content: content)
+                kind: artifact.kind, content: content),
+            // The live artifact's declared intents follow it into the immersive
+            // window, so entering fullscreen no longer kills its bindings.
+            intents: ArtifactFullscreenIntentContext.make(
+                kind: artifact.kind,
+                supportsArtifactActions: capabilitiesStore.capabilities.supportsArtifactActions,
+                artifactID: artifact.id,
+                actions: live.topLevelActions
+            )
         )
         #endif
     }
