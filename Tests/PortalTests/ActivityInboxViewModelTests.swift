@@ -109,25 +109,25 @@ struct ActivityInboxViewModelTests {
     }
 
     @Test("dismiss removes item")
-    func dismissLocallyOnRPCFail() async {
+    internal func dismissLocallyOnRPCFail() async throws {
         let vm = ActivityInboxViewModel()
         vm.handle(.approvalRequest(payload: ApprovalPayload(
             command: "ls", sessionKey: "s1", toolName: nil, rawArgs: nil
         )), eventSessionID: "s1")
         let before = vm.items.count
         #expect(before >= 1)
-        let item = vm.items.first { $0.kind == "approval.request" }!
+        let item = try #require(vm.items.first { $0.kind == "approval.request" })
         await vm.dismiss(item)
         #expect(!vm.items.contains { $0.id == item.id })
     }
 
     @Test("markRead updates item")
-    func markReadLocallyOnRPCFail() async {
+    internal func markReadLocallyOnRPCFail() async throws {
         let vm = ActivityInboxViewModel()
         vm.handle(.approvalRequest(payload: ApprovalPayload(
             command: "ls", sessionKey: "s1", toolName: nil, rawArgs: nil
         )), eventSessionID: "s1")
-        let item = vm.items.first { $0.kind == "approval.request" }!
+        let item = try #require(vm.items.first { $0.kind == "approval.request" })
         #expect(item.isRead == false)
         await vm.markRead(item)
         #expect(vm.items.first { $0.id == item.id }?.isRead == true)
