@@ -3,12 +3,12 @@ import Testing
 @testable import Portal
 
 @Suite("Chat Layout Math")
-struct ChatLayoutMathTests {
+internal struct ChatLayoutMathTests {
 
     // MARK: - Input-field height
 
     @Test("Sub-point height deltas are absorbed, real line changes adopted")
-    func inputHeightTolerance() {
+    internal func inputHeightTolerance() {
         // First measurement is always adopted.
         #expect(ChatLayoutMath.shouldAdoptInputHeight(current: nil, proposed: 30))
         // Relayout noise of the same text: absorbed.
@@ -20,7 +20,7 @@ struct ChatLayoutMathTests {
     }
 
     @Test("Clamped input height is stable for identical inputs")
-    func clampedInputHeightStability() {
+    internal func clampedInputHeightStability() {
         let lineHeight: CGFloat = 18.1
         let a = ChatLayoutMath.clampedInputHeight(reported: 54.3, lineHeight: lineHeight, maxLines: 8)
         let b = ChatLayoutMath.clampedInputHeight(reported: 54.3, lineHeight: lineHeight, maxLines: 8)
@@ -29,7 +29,7 @@ struct ChatLayoutMathTests {
     }
 
     @Test("Clamped input height respects the one-line floor and maxLines cap")
-    func clampedInputHeightBounds() {
+    internal func clampedInputHeightBounds() {
         let lineHeight: CGFloat = 18
         // No measurement yet → one line + padding.
         #expect(ChatLayoutMath.clampedInputHeight(reported: nil, lineHeight: lineHeight, maxLines: 8) == 30)
@@ -40,7 +40,7 @@ struct ChatLayoutMathTests {
     }
 
     @Test("Width fallback only updates on a meaningful change")
-    func widthChangeGate() {
+    internal func widthChangeGate() {
         #expect(ChatLayoutMath.widthMeaningfullyChanged(current: nil, proposed: 300))
         #expect(!ChatLayoutMath.widthMeaningfullyChanged(current: 300, proposed: 300.3))
         #expect(!ChatLayoutMath.widthMeaningfullyChanged(current: 300.3, proposed: 300))
