@@ -788,8 +788,8 @@ final class WikiGraphViewModel: ObservableObject {
         let anyDragging = simNodes.contains { $0.isDragging }
         guard alpha > alphaMin || anyDragging else { return }
         let charge: Float = chargeConstant3D
-        let maxForce: Float = Float(maxRepulsionForce)
-        let springK: Float = Float(springConstant)
+        let maxForce = Float(maxRepulsionForce)
+        let springK = Float(springConstant)
         // Simulate into a local copy so the @Published publisher fires once per tick.
         var nodes = simNodes
         for _ in 0..<iterationsPerFrame {

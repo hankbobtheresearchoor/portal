@@ -75,7 +75,7 @@ struct SRSState: Codable, Equatable {
     /// Number of consecutive correct reviews (quality >= 3)
     var repetitions: Int = 0
     /// When this card should be reviewed again
-    var nextReviewDate: Date = Date()
+    internal var nextReviewDate = Date()
     /// When this card was last reviewed
     var lastReviewedAt: Date?
     /// Quality score from last review

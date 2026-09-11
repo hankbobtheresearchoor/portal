@@ -46,7 +46,7 @@ final class GatewayClient: NSObject, ObservableObject, URLSessionWebSocketDelega
     /// Last WebSocket ping round-trip time (updated every ~15s while
     /// connected; nil until the first pong or after a ping failure).
     @Published private(set) var lastPingRTT: TimeInterval?
-    private var debugSnapshot: GatewayDebugSnapshot = GatewayDebugSnapshot()
+    private var debugSnapshot = GatewayDebugSnapshot()
     var onDebugSnapshotChange: (() -> Void)?
     var snapshotForDebug: GatewayDebugSnapshot {
         // recentEvents is stored oldest-first (append + cap, avoids per-event
