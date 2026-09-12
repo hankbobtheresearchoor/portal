@@ -3,15 +3,15 @@ import Foundation
 @testable import Portal
 
 @Suite("Harness Presentation")
-struct HarnessPresentationTests {
+internal struct HarnessPresentationTests {
 
     @Test("hermes presentation is persona-driven — no fixed harness identity")
-    func hermesHasNoHarnessPersona() {
+    internal func hermesHasNoHarnessPersona() {
         #expect(BackendCapabilities.hermes.harnessPersona == nil)
     }
 
     @Test("centaur presents as Centaur, never as a Hermes persona")
-    func centaurHasFixedIdentity() {
+    internal func centaurHasFixedIdentity() {
         let persona = BackendCapabilities.centaur.harnessPersona
         #expect(persona == .centaurPersona)
         #expect(persona?.name == "Centaur")
@@ -19,7 +19,7 @@ struct HarnessPresentationTests {
     }
 
     @Test("centaur harness identity matches its BackendKind icon")
-    func centaurIconsAgree() {
+    internal func centaurIconsAgree() {
         // The New Session menu (BackendKind) and the chat chrome (Persona)
         // must show the same glyph or the session looks like it changed
         // platforms between create and first message.
@@ -27,13 +27,13 @@ struct HarnessPresentationTests {
     }
 
     @Test("gateway service surface is hermes-only")
-    func gatewayServicesGating() {
+    internal func gatewayServicesGating() {
         #expect(BackendCapabilities.hermes.supportsGatewayServices)
         #expect(!BackendCapabilities.centaur.supportsGatewayServices)
     }
 
     @Test("response styles require ephemeral prompt support")
-    func responseStyleGating() {
+    internal func responseStyleGating() {
         #expect(BackendCapabilities.hermes.supportsResponseStyles)
         // Centaur's setEphemeralPrompt is a silent no-op — offering the
         // style menu there would be a lie.
@@ -42,7 +42,7 @@ struct HarnessPresentationTests {
 
     @Test("centaur client advertises the centaur capability set")
     @MainActor
-    func centaurClientCapabilities() {
+    internal func centaurClientCapabilities() {
         let client = CentaurClient(
             baseURL: URL(string: "https://centaur.example.com")!,
             apiKey: "k"
@@ -53,7 +53,7 @@ struct HarnessPresentationTests {
 
     @Test("slash suggestions stay dark on skill-less backends")
     @MainActor
-    func slashSuggestionsGated() {
+    internal func slashSuggestionsGated() {
         let vm = ChatViewModel()
         let client = CentaurClient(
             baseURL: URL(string: "https://centaur.example.com")!,
