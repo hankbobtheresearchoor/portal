@@ -56,7 +56,7 @@ struct SkillInfoTests {
         ]
         let skill = SkillInfo.fromInspectDict(dict)
         #expect(skill?.name == "minimal-skill")
-        #expect(skill?.description == "")
+        #expect(skill?.description.isEmpty == true)
         #expect(skill?.source == "local")
         #expect(skill?.tags.isEmpty == true)
         #expect(skill?.skillMdPreview == nil)
