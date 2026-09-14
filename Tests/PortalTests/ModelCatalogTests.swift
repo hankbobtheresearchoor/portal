@@ -3,19 +3,17 @@ import Foundation
 @testable import Portal
 
 @Suite("Model Catalog")
-struct ModelCatalogTests {
+internal struct ModelCatalogTests {
 
     /// Decode helper: JSON string → AnyCodable dictionary, the same shape a
     /// JSON-RPC result reaches ModelCatalog.from as.
-    private func result(_ json: String) -> [String: AnyCodable] {
-        return try! JSONDecoder().decode(
-            [String: AnyCodable].self, from: json.data(using: .utf8)!
-        )
+    private func result(_ json: String) throws -> [String: AnyCodable] {
+        try JSONDecoder().decode([String: AnyCodable].self, from: Data(json.utf8))
     }
 
     @Test("Decodes the model.options payload shape")
-    func decodesPayload() {
-        let payload = result("""
+    internal func decodesPayload() throws {
+        let payload = try result("""
         {
           "providers": [
             {"slug": "nous", "name": "Nous", "is_current": true,
@@ -42,8 +40,8 @@ struct ModelCatalogTests {
     }
 
     @Test("Rows without the picker_hints authenticated flag count as authenticated")
-    func missingAuthFlagDefaultsTrue() {
-        let payload = result("""
+    internal func missingAuthFlagDefaultsTrue() throws {
+        let payload = try result("""
         {"providers": [{"slug": "nous", "name": "Nous",
           "models": ["nousresearch/hermes-4-70b"]}], "model": "", "provider": ""}
         """)
@@ -52,23 +50,23 @@ struct ModelCatalogTests {
     }
 
     @Test("Empty or malformed payloads return nil (static catalog fallback)")
-    func malformedReturnsNil() {
-        #expect(ModelCatalog.from(result("{\"model\": \"x\"}")) == nil)
-        #expect(ModelCatalog.from(result("{\"providers\": []}")) == nil)
+    internal func malformedReturnsNil() throws {
+        #expect(ModelCatalog.from(try result("{\"model\": \"x\"}")) == nil)
+        #expect(ModelCatalog.from(try result("{\"providers\": []}")) == nil)
         // A row without a slug is dropped; all dropped → nil.
-        #expect(ModelCatalog.from(result("{\"providers\": [{\"name\": \"NoSlug\"}]}")) == nil)
+        #expect(ModelCatalog.from(try result("{\"providers\": [{\"name\": \"NoSlug\"}]}")) == nil)
     }
 
     @Test("Switch outcome decodes confirmation gates and warnings")
-    func switchOutcome() {
-        let gated = ModelSwitchOutcome.from(result("""
+    internal func switchOutcome() throws {
+        let gated = ModelSwitchOutcome.from(try result("""
         {"key": "model", "value": "openai/o3-pro", "warning": "",
          "confirm_required": true, "confirm_message": "o3-pro is $120/Mtok. Continue?"}
         """))
         #expect(gated.confirmRequired)
         #expect(gated.confirmMessage.contains("$120"))
 
-        let accepted = ModelSwitchOutcome.from(result("""
+        let accepted = ModelSwitchOutcome.from(try result("""
         {"key": "model", "value": "deepseek/deepseek-v4-pro", "warning": "pricing unknown",
          "confirm_required": false, "confirm_message": ""}
         """))
