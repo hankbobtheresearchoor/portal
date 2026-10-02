@@ -224,6 +224,27 @@ internal struct CronPromptPreservationTests {
         #expect(!CronJob.previewMatches(full: full, preview: "..."))
     }
 
+    @Test("the truncation badge follows the preview until a distinct full prompt arrives")
+    internal func truncationBadgeState() {
+        #expect(!job("none", preview: nil, prompt: nil).isPromptTruncated)
+        #expect(job("ascii", preview: preview, prompt: nil).isPromptTruncated)
+        #expect(job("unicode", preview: String(full.prefix(100)) + "…", prompt: nil).isPromptTruncated)
+        #expect(job("same", preview: preview, prompt: preview).isPromptTruncated)
+        #expect(!job("full", preview: preview, prompt: full).isPromptTruncated)
+        #expect(!job("short", preview: "complete", prompt: nil).isPromptTruncated)
+    }
+
+    @Test("cron job equality and hashing use stable gateway identity")
+    internal func identityEqualityAndHashing() {
+        let original = job("same-id", preview: "before", prompt: nil)
+        let refreshed = job("same-id", preview: "after", prompt: "after")
+        let other = job("other-id", preview: "before", prompt: nil)
+
+        #expect(original == refreshed)
+        #expect(original != other)
+        #expect(Set([original, refreshed, other]).count == 2)
+    }
+
     @Test("a fetched full prompt survives a list refresh whose preview still matches it")
     internal func keepsMatchingPrompt() {
         let previous = [job("a", preview: preview, prompt: full)]
