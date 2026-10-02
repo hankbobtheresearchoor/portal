@@ -3,9 +3,9 @@ import Foundation
 @testable import Portal
 
 @Suite("Skill Model")
-struct SkillInfoTests {
+internal struct SkillInfoTests {
     @Test("fromCommandEntry creates skill from slash-command dict")
-    func fromCommandEntry() {
+    internal func fromCommandEntry() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable("Code Review"),
             "description": AnyCodable("Review code for issues"),
@@ -23,7 +23,7 @@ struct SkillInfoTests {
     }
 
     @Test("fromInspectDict parses inspect response with all fields")
-    func fromInspectDict() {
+    internal func fromInspectDict() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable("skill-creator"),
             "description": AnyCodable("Create new skills from experience"),
@@ -41,7 +41,7 @@ struct SkillInfoTests {
     }
 
     @Test("fromInspectDict returns nil when name is empty")
-    func fromInspectDictEmptyName() {
+    internal func fromInspectDictEmptyName() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable(""),
             "description": AnyCodable("no name"),
@@ -50,7 +50,7 @@ struct SkillInfoTests {
     }
 
     @Test("fromInspectDict handles missing optional fields")
-    func fromInspectDictMinimal() {
+    internal func fromInspectDictMinimal() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable("minimal-skill"),
         ]
@@ -63,7 +63,7 @@ struct SkillInfoTests {
     }
 
     @Test("slashCommand is derived from name for inspect results")
-    func slashCommandFromInspect() {
+    internal func slashCommandFromInspect() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable("Code Review"),
         ]
@@ -72,7 +72,7 @@ struct SkillInfoTests {
     }
 
     @Test("SkillInfo equality compares all fields")
-    func equality() {
+    internal func equality() {
         let base = SkillInfo(name: "A", description: "desc", category: "general",
                              source: "local", identifier: nil, tags: [],
                              skillMdPath: nil, skillDir: nil,
@@ -91,9 +91,9 @@ struct SkillInfoTests {
 }
 
 @Suite("Skill Search Result")
-struct SkillSearchResultTests {
+internal struct SkillSearchResultTests {
     @Test("parses search result with name and description")
-    func parseSearchResult() {
+    internal func parseSearchResult() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable("web-search"),
             "description": AnyCodable("Search the web for information"),
@@ -104,7 +104,7 @@ struct SkillSearchResultTests {
     }
 
     @Test("returns nil when name is empty")
-    func parseEmptyName() {
+    internal func parseEmptyName() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable(""),
         ]
@@ -112,7 +112,7 @@ struct SkillSearchResultTests {
     }
 
     @Test("id equals name")
-    func idEqualsName() {
+    internal func idEqualsName() {
         let dict: [String: AnyCodable] = [
             "name": AnyCodable("test-skill"),
             "description": AnyCodable("desc"),
@@ -124,14 +124,14 @@ struct SkillSearchResultTests {
 
 @Suite("Skills View Model")
 @MainActor
-struct SkillsViewModelTests {
+internal struct SkillsViewModelTests {
 
-    init() {
+    internal init() {
         NotificationService.isTestEnvironment = true
     }
 
     @Test("initial state is empty")
-    func initialState() {
+    internal func initialState() {
         let vm = SkillsViewModel()
         #expect(vm.skills.isEmpty)
         #expect(vm.categories.isEmpty)
@@ -143,7 +143,7 @@ struct SkillsViewModelTests {
     }
 
     @Test("installStatus tracks state")
-    func installStatus() {
+    internal func installStatus() {
         let vm = SkillsViewModel()
         #expect(vm.installStatus["my-skill"] == nil)
         vm.installStatus["my-skill"] = "installing"
